@@ -1,0 +1,77 @@
+# Starship prompt — Tokyo Night palette
+# Docs: https://starship.rs/config/
+
+format = """
+[](blue)\
+$os\
+$username\
+[](bg:purple fg:blue)\
+$directory\
+[](bg:cyan fg:purple)\
+$git_branch\
+$git_status\
+[](bg:green fg:cyan)\
+$nodejs\
+$python\
+$rust\
+[](fg:green)\
+$line_break\
+$character"""
+
+palette = "tokyonight"
+
+[palettes.tokyonight]
+base   = "#1a1b26"
+text   = "#c0caf5"
+blue   = "#7aa2f7"
+purple = "#bb9af7"
+cyan   = "#7dcfff"
+green  = "#9ece6a"
+red    = "#f7768e"
+
+[os]
+disabled = false
+style = "bg:blue fg:base"
+
+[os.symbols]
+Macos = "󰀵 "
+
+[username]
+show_always = true
+style_user = "bg:blue fg:base"
+style_root = "bg:red fg:base"
+format = '[ $user ]($style)'
+
+[directory]
+style = "bg:purple fg:base"
+format = "[ $path ]($style)"
+truncation_length = 3
+truncation_symbol = "…/"
+
+[git_branch]
+symbol = ""
+style = "bg:cyan fg:base"
+format = '[ $symbol $branch ]($style)'
+
+[git_status]
+style = "bg:cyan fg:base"
+format = '[$all_status$ahead_behind ]($style)'
+
+[nodejs]
+symbol = ""
+style = "bg:green fg:base"
+format = '[ $symbol ($version) ]($style)'
+
+[python]
+symbol = ""
+style = "bg:green fg:base"
+format = '[ $symbol ($version) ]($style)'
+
+[rust]
+symbol = ""
+style = "bg:green fg:base"
+format = '[ $symbol ($version) ]($style)'
+
+[character]
+success_symbol = "[](bold green)"
+error_symbol = "[](bold red)"

@@ -1,0 +1,13 @@
+#!/bin/bash
+# JankyBorders — active-window glow (Tokyo Night)
+# Docs: https://github.com/FelixKratz/JankyBorders
+
+options=(
+  style=round
+  width=6.0
+  hidpi=on
+  active_color=0xff7aa2f7    # blue  — focused window
+  inactive_color=0xff1a1b26  # base  — unfocused (subtle)
+)
+
+borders "${options[@]}"

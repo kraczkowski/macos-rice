@@ -1,0 +1,81 @@
+# AeroSpace config — tiling window manager
+# Docs: https://nikitabobko.github.io/AeroSpace/guide
+# Reload after edits:  aerospace reload-config
+
+# Start AeroSpace at login
+start-at-login = true
+
+# Normalizations keep the tree tidy
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+
+# Notify SketchyBar when the focused workspace changes (highlights the active space)
+exec-on-workspace-change = ['/bin/bash', '-c',
+  'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE'
+]
+
+# Tiling gaps (the breathing room that makes a rice look clean)
+[gaps]
+inner.horizontal = 8
+inner.vertical   = 8
+outer.left       = 8
+outer.bottom     = 8
+outer.top        = 8     # raise to ~40 once SketchyBar is running, to clear the bar
+outer.right      = 8
+
+# Default layout for new windows: tiled, accordion as fallback
+[mode.main.binding]
+# --- Layout ---
+alt-slash = 'layout tiles horizontal vertical'   # toggle split orientation
+alt-comma = 'layout accordion horizontal vertical'
+
+# --- Focus (move attention between windows) ---
+alt-h = 'focus left'
+alt-j = 'focus down'
+alt-k = 'focus up'
+alt-l = 'focus right'
+
+# --- Move windows around ---
+alt-shift-h = 'move left'
+alt-shift-j = 'move down'
+alt-shift-k = 'move up'
+alt-shift-l = 'move right'
+
+# --- Resize ---
+alt-minus = 'resize smart -50'
+alt-equal = 'resize smart +50'
+
+# --- Workspaces (virtual desktops) ---
+alt-1 = 'workspace 1'
+alt-2 = 'workspace 2'
+alt-3 = 'workspace 3'
+alt-4 = 'workspace 4'
+alt-5 = 'workspace 5'
+
+# Send focused window to a workspace
+alt-shift-1 = 'move-node-to-workspace 1'
+alt-shift-2 = 'move-node-to-workspace 2'
+alt-shift-3 = 'move-node-to-workspace 3'
+alt-shift-4 = 'move-node-to-workspace 4'
+alt-shift-5 = 'move-node-to-workspace 5'
+
+# Jump back to previous workspace
+alt-tab = 'workspace-back-and-forth'
+
+# Toggle floating / tiling for the focused window
+alt-shift-space = 'layout floating tiling'
+
+# Fullscreen
+alt-f = 'fullscreen'
+
+# Enter "service" mode for less-common actions
+alt-shift-semicolon = 'mode service'
+
+[mode.service.binding]
+esc = ['reload-config', 'mode main']
+r = ['flatten-workspace-tree', 'mode main']   # reset layout
+f = ['layout floating tiling', 'mode main']
+backspace = ['close-all-windows-but-current', 'mode main']
+
+# Reload borders when AeroSpace starts (so the glow is always on)
+after-startup-command = ['exec-and-forget borders']
