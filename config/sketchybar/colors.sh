@@ -1,11 +1,11 @@
 #!/bin/bash
-# Tokyo Night palette — shared by plugins
-export BASE=0xff1a1b26
-export TEXT=0xffc0caf5
-export BLUE=0xff7aa2f7
-export PURPLE=0xffbb9af7
-export CYAN=0xff7dcfff
-export GREEN=0xff9ece6a
-export YELLOW=0xffe0af68
-export RED=0xfff7768e
-export SURFACE=0xff292e42
+# Sunset Ember palette — shared by plugins
+export BASE=0xff0a1618
+export TEXT=0xffe8d5c2
+export BLUE=0xffb33219     # ember accent  — focus / app name
+export PURPLE=0xffa5311a   # oxidized iron — secondary accent
+export CYAN=0xffd9c0ae     # warm light    — wifi / volume icons
+export GREEN=0xffc9a892    # warm sand     — battery good
+export YELLOW=0xffa5311a   # oxidized iron — battery mid
+export RED=0xffb33219      # brick ember   — battery low / alert
+export SURFACE=0xff162930  # dark teal     — idle dot

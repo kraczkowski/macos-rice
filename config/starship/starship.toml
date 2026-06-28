@@ -1,4 +1,4 @@
-# Starship prompt — Tokyo Night palette
+# Starship prompt — Sunset Ember palette
 # Docs: https://starship.rs/config/
 
 format = """
@@ -18,16 +18,16 @@ $rust\
 $line_break\
 $character"""
 
-palette = "tokyonight"
+palette = "sunset_ember"
 
-[palettes.tokyonight]
-base   = "#1a1b26"
-text   = "#c0caf5"
-blue   = "#7aa2f7"
-purple = "#bb9af7"
-cyan   = "#7dcfff"
-green  = "#9ece6a"
-red    = "#f7768e"
+[palettes.sunset_ember]
+base   = "#0a1618"
+text   = "#e8d5c2"
+blue   = "#b33219"   # ember      — os / user segment
+purple = "#a5311a"   # oxidized   — directory segment
+cyan   = "#c2542f"   # burnt      — git segment
+green  = "#d9853f"   # amber      — language segment
+red    = "#b33219"   # ember      — root / error
 
 [os]
 disabled = false

@@ -9,6 +9,9 @@ start-at-login = true
 enable-normalization-flatten-containers = true
 enable-normalization-opposite-orientation-for-nested-containers = true
 
+# Reload borders when AeroSpace starts (so the glow is always on)
+after-startup-command = ['exec-and-forget borders']
+
 # Notify SketchyBar when the focused workspace changes (highlights the active space)
 exec-on-workspace-change = ['/bin/bash', '-c',
   'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE'
@@ -20,7 +23,7 @@ inner.horizontal = 8
 inner.vertical   = 8
 outer.left       = 8
 outer.bottom     = 8
-outer.top        = 44    # clears the SketchyBar (height 36 + offset)
+outer.top        = 8     # macOS reserves 32px at top (covers the bar); just an 8px gap
 outer.right      = 8
 
 # Default layout for new windows: tiled, accordion as fallback
@@ -76,6 +79,3 @@ esc = ['reload-config', 'mode main']
 r = ['flatten-workspace-tree', 'mode main']   # reset layout
 f = ['layout floating tiling', 'mode main']
 backspace = ['close-all-windows-but-current', 'mode main']
-
-# Reload borders when AeroSpace starts (so the glow is always on)
-after-startup-command = ['exec-and-forget borders']

@@ -1,36 +1,36 @@
-# Ghostty — Tokyo Night
+# Ghostty — Sunset Ember
 # Docs: https://ghostty.org/docs/config
 
 font-family = "JetBrainsMono Nerd Font"
 font-size = 14
 
-background = 1a1b26
-foreground = c0caf5
-cursor-color = c0caf5
-selection-background = 33467c
-selection-foreground = c0caf5
+background = 0a1618
+foreground = e8d5c2
+cursor-color = b33219
+selection-background = 481510
+selection-foreground = e8d5c2
 
 # normal
-palette = 0=#15161e
-palette = 1=#f7768e
-palette = 2=#9ece6a
-palette = 3=#e0af68
-palette = 4=#7aa2f7
-palette = 5=#bb9af7
-palette = 6=#7dcfff
-palette = 7=#a9b1d6
+palette = 0=#030602
+palette = 1=#b33219
+palette = 2=#6e7a52
+palette = 3=#d9853f
+palette = 4=#3e7a85
+palette = 5=#9c3b4a
+palette = 6=#4f9aa5
+palette = 7=#e8d5c2
 # bright
-palette = 8=#414868
-palette = 9=#f7768e
-palette = 10=#9ece6a
-palette = 11=#e0af68
-palette = 12=#7aa2f7
-palette = 13=#bb9af7
-palette = 14=#7dcfff
-palette = 15=#c0caf5
+palette = 8=#38252a
+palette = 9=#d6492b
+palette = 10=#8a9560
+palette = 11=#e8a04f
+palette = 12=#4f93a0
+palette = 13=#b9576a
+palette = 14=#6bb3bd
+palette = 15=#f2e6d8
 
-background-opacity = 0.95
-background-blur-radius = 20
+background-opacity = 0.82
+background-blur-radius = 32
 window-padding-x = 12
 window-padding-y = 12
 window-decoration = true
