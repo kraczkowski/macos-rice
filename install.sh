@@ -46,6 +46,9 @@ else
   echo "    starship already in ~/.zshrc"
 fi
 
+echo "==> Hiding native menu bar so SketchyBar is visible"
+defaults write NSGlobalDomain _HIHideMenuBar -bool true
+
 echo "==> Starting services"
 brew services start sketchybar 2>/dev/null || sketchybar --reload
 brew services start borders 2>/dev/null || true

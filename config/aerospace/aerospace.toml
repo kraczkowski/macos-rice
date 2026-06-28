@@ -20,7 +20,7 @@ inner.horizontal = 8
 inner.vertical   = 8
 outer.left       = 8
 outer.bottom     = 8
-outer.top        = 8     # raise to ~40 once SketchyBar is running, to clear the bar
+outer.top        = 44    # clears the SketchyBar (height 36 + offset)
 outer.right      = 8
 
 # Default layout for new windows: tiled, accordion as fallback
