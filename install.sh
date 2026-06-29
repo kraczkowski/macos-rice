@@ -29,6 +29,7 @@ link aerospace
 link sketchybar
 link borders
 link ghostty
+link fastfetch
 # starship lives at ~/.config/starship.toml (single file)
 ln -sfn "$REPO/config/starship/starship.toml" "$CONFIG/starship.toml"
 echo "    linked starship.toml"
@@ -49,6 +50,9 @@ if ! grep -q 'starship init zsh' "$HOME/.zshrc" 2>/dev/null; then
 else
   echo "    starship already in ~/.zshrc"
 fi
+
+echo "==> Silencing the 'Last login' banner (~/.hushlogin)"
+touch "$HOME/.hushlogin"
 
 echo "==> Hiding native menu bar so SketchyBar is visible"
 defaults write NSGlobalDomain _HIHideMenuBar -bool true

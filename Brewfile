@@ -9,6 +9,9 @@ cask "nikitabobko/tap/aerospace"   # tiling window manager (no SIP disable)
 brew "sketchybar"                  # scriptable custom menu bar
 brew "borders"                     # active-window glow (JankyBorders)
 
+# --- CLI eye-candy ---
+brew "fastfetch"                   # system info (debloated config)
+
 # --- Audio visualizer ---
 brew "cava"                        # console audio visualizer
 cask "blackhole-2ch"               # virtual loopback device (route system audio to cava)
