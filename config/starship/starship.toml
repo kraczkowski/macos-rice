@@ -61,7 +61,3 @@ format = '[ $symbol ]($style)'
 symbol = ""
 style = "fg:sand"
 format = '[ $symbol ]($style)'
-
-[character]
-success_symbol = "[](bold ember)"
-error_symbol = "[](bold red)"

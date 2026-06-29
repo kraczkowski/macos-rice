@@ -1,21 +1,13 @@
 #!/bin/bash
-# SketchyBar — Tokyo Night
+# SketchyBar — Sunset Ember
 # Docs: https://felixkratz.github.io/SketchyBar/
 # Reload after edits:  sketchybar --reload
 
 PLUGIN_DIR="$CONFIG_DIR/plugins"
 
-# --- Sunset Ember palette ---
-export BASE=0xff0a1618
-export BAR=0xf00a1618      # slightly translucent bar
-export TEXT=0xffe8d5c2
-export BLUE=0xffb33219     # ember accent
-export PURPLE=0xffa5311a   # oxidized iron
-export CYAN=0xffd9c0ae     # warm light
-export GREEN=0xffc9a892    # warm sand
-export YELLOW=0xffa5311a   # oxidized iron
-export RED=0xffb33219      # brick ember
-export SURFACE=0xff162930  # dark teal
+# --- Sunset Ember palette (single source of truth: colors.sh) ---
+source "$CONFIG_DIR/colors.sh"
+export BAR=0xf00a1618      # slightly translucent bar (only color not in colors.sh)
 
 FONT="JetBrainsMono Nerd Font"
 
