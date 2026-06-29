@@ -21,16 +21,6 @@ focus_fastfetch() {
   return 0
 }
 
-# Route system audio through Background Music so cava reacts. Save the current
-# default output first; bin/on-workspace-change restores it when you leave WS9,
-# so the mic-capture indicator is lit only while the showpiece is on screen.
-STATE="${TMPDIR:-/tmp}/rice_prev_output"
-if command -v SwitchAudioSource >/dev/null; then
-  cur="$(SwitchAudioSource -t output -c)"
-  [ "$cur" != "Background Music" ] && printf '%s' "$cur" > "$STATE"
-  SwitchAudioSource -t output -s "Background Music" >/dev/null 2>&1 || true
-fi
-
 # Guard: if the showpiece workspace already has windows, just go there and
 # put focus back on fastfetch.
 existing="$(aerospace list-windows --workspace "$WS" 2>/dev/null | grep -c . || true)"

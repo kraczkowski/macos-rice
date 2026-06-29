@@ -16,7 +16,6 @@ brew "btop"                        # resource monitor (themed)
 # --- Audio visualizer ---
 brew "cava"                        # console audio visualizer
 cask "background-music"            # default output w/ loopback for cava; keeps volume keys working
-brew "switchaudio-osx"             # CLI output switching; showpiece flips to BGM only while on screen
 
 # --- Terminal + prompt ---
 cask "ghostty"                     # fast GPU terminal
