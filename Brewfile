@@ -15,7 +15,7 @@ brew "btop"                        # resource monitor (themed)
 
 # --- Audio visualizer ---
 brew "cava"                        # console audio visualizer
-cask "blackhole-2ch"               # virtual loopback device (route system audio to cava)
+cask "background-music"            # default output w/ loopback for cava; keeps volume keys working
 
 # --- Terminal + prompt ---
 cask "ghostty"                     # fast GPU terminal

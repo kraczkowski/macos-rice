@@ -2,10 +2,11 @@
 # Docs: https://github.com/karlstav/cava
 
 [input]
-# macOS captures audio through a loopback device. Install BlackHole, route
-# system output to it (via a Multi-Output Device), then cava reads from it.
+# macOS captures audio through a loopback device. Background Music is the
+# default output and exposes a loopback of everything playing; cava reads it.
+# (This keeps the volume keys working, unlike a BlackHole Multi-Output Device.)
 method = portaudio
-source = BlackHole 2ch
+source = Background Music
 
 [general]
 framerate = 60
