@@ -1,77 +1,67 @@
 # Starship prompt — Sunset Ember palette
+# Shared palette mirrors config/sketchybar/colors.sh
 # Docs: https://starship.rs/config/
 
 format = """
-[](blue)\
+[](ember)\
 $os\
-$username\
-[](bg:purple fg:blue)\
 $directory\
-[](bg:cyan fg:purple)\
+[](fg:ember)\
 $git_branch\
 $git_status\
-[](bg:green fg:cyan)\
 $nodejs\
 $python\
-$rust\
-[](fg:green)\
-$line_break\
-$character"""
+$rust """
 
 palette = "sunset_ember"
 
 [palettes.sunset_ember]
-base   = "#0a1618"
-text   = "#e8d5c2"
-blue   = "#b33219"   # ember      — os / user segment
-purple = "#a5311a"   # oxidized   — directory segment
-cyan   = "#c2542f"   # burnt      — git segment
-green  = "#d9853f"   # amber      — language segment
-red    = "#b33219"   # ember      — root / error
+base    = "#0a1618"   # dark teal base
+text    = "#e8d5c2"   # warm white
+ember   = "#b33219"   # ember accent  — prompt pill (os + directory)
+oxide   = "#a5311a"   # oxidized iron — git
+sand    = "#c9a892"   # warm sand     — languages
+surface = "#162930"   # dark teal surface
+red     = "#b33219"   # error
 
 [os]
 disabled = false
-style = "bg:blue fg:base"
+style = "bg:surface fg:ember"
+format = "[ $symbol]($style)"
 
 [os.symbols]
 Macos = "󰀵 "
 
-[username]
-show_always = true
-style_user = "bg:blue fg:base"
-style_root = "bg:red fg:base"
-format = '[ $user ]($style)'
-
 [directory]
-style = "bg:purple fg:base"
+style = "bg:surface fg:text"
 format = "[ $path ]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
 
 [git_branch]
 symbol = ""
-style = "bg:cyan fg:base"
+style = "fg:oxide"
 format = '[ $symbol $branch ]($style)'
 
 [git_status]
-style = "bg:cyan fg:base"
+style = "fg:oxide"
 format = '[$all_status$ahead_behind ]($style)'
 
 [nodejs]
 symbol = ""
-style = "bg:green fg:base"
-format = '[ $symbol ($version) ]($style)'
+style = "fg:sand"
+format = '[ $symbol ]($style)'
 
 [python]
 symbol = ""
-style = "bg:green fg:base"
-format = '[ $symbol ($version) ]($style)'
+style = "fg:sand"
+format = '[ $symbol ]($style)'
 
 [rust]
 symbol = ""
-style = "bg:green fg:base"
-format = '[ $symbol ($version) ]($style)'
+style = "fg:sand"
+format = '[ $symbol ]($style)'
 
 [character]
-success_symbol = "[](bold green)"
-error_symbol = "[](bold red)"
+success_symbol = "[](bold ember)"
+error_symbol = "[](bold red)"
