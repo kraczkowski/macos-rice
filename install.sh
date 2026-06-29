@@ -58,6 +58,7 @@ if ! grep -q 'macos-rice shell plugins' "$HOME/.zshrc" 2>/dev/null; then
 
 # >>> macos-rice shell plugins >>>
 # Managed by ~/dev/macos-rice/install.sh. fast-syntax-highlighting must load last.
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#7a6a5e'
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh 2>/dev/null
 command -v fzf >/dev/null && source <(fzf --zsh)
 source /opt/homebrew/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh 2>/dev/null
