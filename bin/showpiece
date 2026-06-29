@@ -22,7 +22,7 @@ aerospace workspace "$WS"
 # Open three windows in a row: fastfetch, pipes, btop (left -> right).
 # -n forces a new window; -e runs the command. fastfetch drops to a shell
 # afterwards so its output stays on screen.
-open -na Ghostty.app --args -e zsh -lc "fastfetch; exec zsh"
+open -na Ghostty.app --args -e zsh -lc "cd ~/dev; fastfetch; exec zsh"
 sleep 0.7
 open -na Ghostty.app --args -e cava
 sleep 0.7
