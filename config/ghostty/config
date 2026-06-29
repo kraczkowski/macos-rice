@@ -31,7 +31,7 @@ palette = 13=#b9576a
 palette = 14=#6bb3bd
 palette = 15=#f2e6d8
 
-background-opacity = 0.3
+background-opacity = 0.2
 background-blur-radius = 32
 window-padding-x = 12
 window-padding-y = 12
