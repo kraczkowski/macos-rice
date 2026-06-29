@@ -10,10 +10,23 @@ set -euo pipefail
 
 WS=9
 
-# Guard: if the showpiece workspace already has windows, just go there.
+# Focus the fastfetch pane. It's the only WS window running an interactive
+# shell, so its window title is "zsh" (cava -> "cava", btop -> "btop"). Works
+# on both a fresh launch and a re-press, so focus always lands here.
+focus_fastfetch() {
+  local id
+  id="$(aerospace list-windows --workspace "$WS" --format '%{window-id}|%{window-title}' \
+        | awk -F'|' '$2 ~ /zsh/ {gsub(/ /,"",$1); print $1; exit}')"
+  [ -n "$id" ] && aerospace focus --window-id "$id"
+  return 0
+}
+
+# Guard: if the showpiece workspace already has windows, just go there and
+# put focus back on fastfetch.
 existing="$(aerospace list-windows --workspace "$WS" 2>/dev/null | grep -c . || true)"
 if [ "${existing:-0}" -gt 0 ]; then
   aerospace workspace "$WS"
+  focus_fastfetch
   exit 0
 fi
 
@@ -33,6 +46,12 @@ sleep 1.4
 # focus the middle window (cava), merge it with its left neighbor (fastfetch)
 # into one container, then stack that container vertically. btop stays as the
 # right half on its own.
-aerospace focus left          # btop -> cava
-aerospace join-with left      # cava + fastfetch -> one container
-aerospace layout v_tiles      # stack that container: fastfetch top, cava bottom
+# NB: these can exit non-zero (e.g. layout already applied); don't let `set -e`
+# abort the script before the focus step below runs.
+aerospace focus left     || true   # btop -> cava
+aerospace join-with left || true   # cava + fastfetch -> one container
+aerospace layout v_tiles || true   # stack: fastfetch top, cava bottom
+
+# Leave focus on the fastfetch pane (reshape focus order is unreliable).
+sleep 0.3
+focus_fastfetch

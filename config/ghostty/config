@@ -7,6 +7,8 @@ font-size = 12
 background = 0a1618
 foreground = e8d5c2
 cursor-color = b33219
+cursor-style = bar
+cursor-style-blink = false
 selection-background = 481510
 selection-foreground = e8d5c2
 
