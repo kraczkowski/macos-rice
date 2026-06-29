@@ -10,6 +10,8 @@ source = BlackHole 2ch
 [general]
 framerate = 60
 bars = 0          # 0 = auto-fit to window width
+autosens = 1      # auto-scale bars to the music's loudness
+sensitivity = 85  # <100 tames the big spikes (default 100)
 
 [color]
 gradient = 1
@@ -18,4 +20,9 @@ gradient_color_1 = '#5c1416'   # wine
 gradient_color_2 = '#d6492b'   # ember
 
 [smoothing]
-noise_reduction = 0.77
+# Scale is 0-100. 0 = raw/twitchy, 100 = very slow & smooth. Default 77.
+noise_reduction = 92
+# Monstercat: neighboring bars bleed into each other so the bars flow like a
+# wave instead of snapping independently. waves softens that bleed further.
+monstercat = 1.2
+waves = 1
