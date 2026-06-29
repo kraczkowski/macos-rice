@@ -30,6 +30,7 @@ link sketchybar
 link borders
 link ghostty
 link fastfetch
+link btop
 # starship lives at ~/.config/starship.toml (single file)
 ln -sfn "$REPO/config/starship/starship.toml" "$CONFIG/starship.toml"
 echo "    linked starship.toml"

@@ -11,6 +11,7 @@ brew "borders"                     # active-window glow (JankyBorders)
 
 # --- CLI eye-candy ---
 brew "fastfetch"                   # system info (debloated config)
+brew "btop"                        # resource monitor (themed)
 
 # --- Audio visualizer ---
 brew "cava"                        # console audio visualizer

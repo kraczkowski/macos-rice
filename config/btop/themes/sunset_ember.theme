@@ -1,0 +1,87 @@
+# Sunset Ember — btop theme
+# Dark teal base, oxidized-iron + ember reds, warm sunset gradients.
+# Mirrors config/sketchybar/colors.sh and the Ghostty palette.
+
+# Main background. Empty = use terminal background (Ghostty is transparent+blur).
+theme[main_bg]=""
+
+# Main text color
+theme[main_fg]="#e8d5c2"
+
+# Title color for boxes
+theme[title]="#e8d5c2"
+
+# Highlight color for keyboard shortcuts
+theme[hi_fg]="#b33219"
+
+# Background color of selected item in processes box
+theme[selected_bg]="#5c1416"
+
+# Foreground color of selected item in processes box
+theme[selected_fg]="#e8d5c2"
+
+# Color of inactive/disabled text
+theme[inactive_fg]="#5c6b6e"
+
+# Color of text appearing on top of graphs (uptime, net scaling)
+theme[graph_text]="#c9a892"
+
+# Background color of the percentage meters
+theme[meter_bg]="#162930"
+
+# Misc colors for processes box (mini graphs, details text)
+theme[proc_misc]="#c9a892"
+
+# Box outlines
+theme[cpu_box]="#b33219"
+theme[mem_box]="#a5311a"
+theme[net_box]="#5c1416"
+theme[proc_box]="#a5311a"
+
+# Box divider line and small boxes line color
+theme[div_line]="#2a3f44"
+
+# Temperature graph: wine -> ember -> gold
+theme[temp_start]="#5c1416"
+theme[temp_mid]="#b33219"
+theme[temp_end]="#eaa54e"
+
+# CPU graph: mahogany -> ember -> sunset orange
+theme[cpu_start]="#481510"
+theme[cpu_mid]="#b33219"
+theme[cpu_end]="#e0651f"
+
+# Mem/Disk free meter: muted warm
+theme[free_start]="#481510"
+theme[free_mid]="#a5311a"
+theme[free_end]="#c9a892"
+
+# Mem/Disk cached meter: cool teal accent (contrast against the warm)
+theme[cached_start]="#162930"
+theme[cached_mid]="#3d5a5e"
+theme[cached_end]="#7fa3a0"
+
+# Mem/Disk available meter: warm gold
+theme[available_start]="#5c1416"
+theme[available_mid]="#b3651f"
+theme[available_end]="#eaa54e"
+
+# Mem/Disk used meter: ember
+theme[used_start]="#481510"
+theme[used_mid]="#b33219"
+theme[used_end]="#e0651f"
+
+# Download graph: ember warm
+theme[download_start]="#5c1416"
+theme[download_mid]="#b33219"
+theme[download_end]="#eaa54e"
+
+# Upload graph: oxidized iron
+theme[upload_start]="#481510"
+theme[upload_mid]="#a5311a"
+theme[upload_end]="#e0651f"
+
+# Process box gradient (threads / mem / cpu usage)
+theme[process_start]="#5c1416"
+theme[process_mid]="#b33219"
+theme[process_end]="#eaa54e"
