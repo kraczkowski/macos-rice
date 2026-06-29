@@ -32,6 +32,10 @@ link ghostty
 # starship lives at ~/.config/starship.toml (single file)
 ln -sfn "$REPO/config/starship/starship.toml" "$CONFIG/starship.toml"
 echo "    linked starship.toml"
+# cava ships its own shaders/themes in ~/.config/cava, so link just the file
+mkdir -p "$CONFIG/cava"
+ln -sfn "$REPO/config/cava/config" "$CONFIG/cava/config"
+echo "    linked cava/config"
 
 echo "==> Making scripts executable"
 chmod +x "$REPO"/config/sketchybar/sketchybarrc \

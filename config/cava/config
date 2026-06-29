@@ -1,0 +1,21 @@
+# cava — Console Audio Visualizer (Sunset Ember)
+# Docs: https://github.com/karlstav/cava
+
+[input]
+# macOS captures audio through a loopback device. Install BlackHole, route
+# system output to it (via a Multi-Output Device), then cava reads from it.
+method = portaudio
+source = BlackHole 2ch
+
+[general]
+framerate = 60
+bars = 0          # 0 = auto-fit to window width
+
+[color]
+gradient = 1
+gradient_count = 2
+gradient_color_1 = '#5c1416'   # wine
+gradient_color_2 = '#d6492b'   # ember
+
+[smoothing]
+noise_reduction = 0.77
