@@ -52,6 +52,22 @@ else
   echo "    starship already in ~/.zshrc"
 fi
 
+echo "==> Enabling zsh plugins (autosuggestions, syntax highlighting, fzf)"
+if ! grep -q 'macos-rice shell plugins' "$HOME/.zshrc" 2>/dev/null; then
+  cat >> "$HOME/.zshrc" <<'EOF'
+
+# >>> macos-rice shell plugins >>>
+# Managed by ~/dev/macos-rice/install.sh. fast-syntax-highlighting must load last.
+source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh 2>/dev/null
+command -v fzf >/dev/null && source <(fzf --zsh)
+source /opt/homebrew/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh 2>/dev/null
+# <<< macos-rice shell plugins <<<
+EOF
+  echo "    added plugin block to ~/.zshrc"
+else
+  echo "    plugin block already in ~/.zshrc"
+fi
+
 echo "==> Silencing the 'Last login' banner (~/.hushlogin)"
 touch "$HOME/.hushlogin"
 

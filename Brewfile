@@ -20,6 +20,9 @@ cask "blackhole-2ch"               # virtual loopback device (route system audio
 # --- Terminal + prompt ---
 cask "ghostty"                     # fast GPU terminal
 brew "starship"                    # cross-shell prompt
+brew "zsh-autosuggestions"         # ghost-text suggestions from history
+brew "zsh-fast-syntax-highlighting"# colors commands as you type
+brew "fzf"                         # fuzzy finder (Ctrl+R history, Ctrl+T files)
 
 # --- Fonts (needed for icons in bar/terminal) ---
 cask "font-jetbrains-mono-nerd-font"
