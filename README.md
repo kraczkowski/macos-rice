@@ -86,11 +86,20 @@ workspace 9:
 └──────────┴──────────┘
 ```
 
-cava reads audio via the **Background Music** loopback. Note: BGM keeps the
-orange mic indicator lit while it's the default output (it reads its own
-loopback to pass audio through) — so the setup leaves the default output on the
-speakers and you switch output to Background Music in Sound settings only while
-running the showpiece.
+cava reads audio via the **Background Music** loopback. Launching the showpiece
+starts Background Music and routes output through it; leaving workspace 9 kills
+cava, quits Background Music, and restores your output device. So the orange mic
+indicator only shows while the showpiece is actually on screen.
+
+> **Heads-up: the cava setup is a giant pile of macOS workarounds.** macOS has no
+> native audio loopback, so you need a virtual device (Background Music). The
+> privacy "mic in use" dot can't be hidden without disabling SIP; a Multi-Output
+> Device would kill the volume keys; Background Music *and* cava each hold the
+> mic open on their own; and the showpiece windows need to be torn down
+> programmatically (killing the TUIs, suppressing Ghostty's close prompt,
+> re-asserting focus) just to leave the workspace cleanly. On Linux this is one
+> line pointing cava at a PipeWire `.monitor` source. Honestly? On macOS you may
+> just want to skip cava and enjoy the rest of the rice. 🙃
 
 ## Layout
 

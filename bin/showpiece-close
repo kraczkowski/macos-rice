@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Tear down every showpiece window cleanly.
+#
+# The TUIs (cava, btop) are *killed* rather than closed via the window manager:
+# a killed process exits on its own and its Ghostty window closes WITHOUT the
+# "there is still a running process" confirmation prompt that `aerospace close`
+# would trigger. Only the idle fastfetch/zsh pane is closed via AeroSpace (an
+# idle shell doesn't prompt).
+#
+# Killing cava also releases the audio input it holds open (the orange mic dot).
+set -uo pipefail
+
+WS=9
+
+pkill -x cava 2>/dev/null || true
+pkill -x btop 2>/dev/null || true
+sleep 0.3
+
+# Close whatever windows remain on WS9 (the fastfetch/zsh pane, plus any TUI
+# window that hasn't finished closing yet).
+for id in $(aerospace list-windows --workspace "$WS" --format '%{window-id}' 2>/dev/null); do
+  aerospace close --window-id "$id" 2>/dev/null || true
+done
+
+# Closes are async — wait until WS9 is actually empty so callers can rely on it
+# (fresh relaunch tiles correctly; the leave-teardown won't re-trigger itself).
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  [ -z "$(aerospace list-windows --workspace "$WS" --format '%{window-id}' 2>/dev/null)" ] && break
+  sleep 0.2
+done
+
+exit 0

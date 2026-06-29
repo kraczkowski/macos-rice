@@ -8,49 +8,85 @@
 # Bound to alt-shift-s. Re-pressing it just focuses the showpiece (no relaunch).
 set -euo pipefail
 
+DIR="$(cd "$(dirname "$0")" && pwd)"
 WS=9
 
-# Focus the fastfetch pane. It's the only WS window running an interactive
-# shell, so its window title is "zsh" (cava -> "cava", btop -> "btop"). Works
-# on both a fresh launch and a re-press, so focus always lands here.
+# Window id of the WS9 pane whose title matches a regex. Titles settle to:
+# fastfetch pane -> "zsh", cava pane -> "cava", btop pane -> "btop".
+win_id() {
+  aerospace list-windows --workspace "$WS" --format '%{window-id}|%{window-title}' 2>/dev/null \
+    | awk -F'|' -v re="$1" '$2 ~ re {gsub(/ /,"",$1); print $1; exit}'
+}
+
+# Focus the fastfetch pane (the interactive-shell window, title "zsh").
 focus_fastfetch() {
-  local id
-  id="$(aerospace list-windows --workspace "$WS" --format '%{window-id}|%{window-title}' \
-        | awk -F'|' '$2 ~ /zsh/ {gsub(/ /,"",$1); print $1; exit}')"
+  local id; id="$(win_id 'zsh')"
   [ -n "$id" ] && aerospace focus --window-id "$id"
   return 0
 }
 
-# Guard: if the showpiece workspace already has windows, just go there and
-# put focus back on fastfetch.
-existing="$(aerospace list-windows --workspace "$WS" 2>/dev/null | grep -c . || true)"
-if [ "${existing:-0}" -gt 0 ]; then
+# Bring up the visualizer audio path: save the current output device, launch
+# Background Music (the passthrough engine cava reads), and make it the default
+# output. on-workspace-change tears this back down when you leave WS9, so the
+# orange mic-capture dot is lit only while the showpiece is up.
+STATE="${TMPDIR:-/tmp}/rice_prev_output"
+if command -v SwitchAudioSource >/dev/null; then
+  cur="$(SwitchAudioSource -t output -c)"
+  [ "$cur" != "Background Music" ] && printf '%s' "$cur" > "$STATE"
+  open -ga "/Applications/Background Music.app" 2>/dev/null || true
+  # wait for the app/device to be ready, then route output through it
+  for _ in 1 2 3 4 5 6 7 8; do
+    SwitchAudioSource -t output -s "Background Music" >/dev/null 2>&1 && break
+    sleep 0.2
+  done
+fi
+
+# Guard: if cava is already running, the showpiece is fully up -> just focus it.
+# Leaving WS9 kills cava (and quits BGM), so "cava running" == "showpiece live".
+if pgrep -x cava >/dev/null 2>&1; then
   aerospace workspace "$WS"
   focus_fastfetch
   exit 0
 fi
+
+# cava isn't running: a fresh launch, or leftover windows from a previous run.
+# Tear any leftovers down cleanly (kills TUIs so there's no close-confirm
+# prompt, waits until WS9 is empty) before laying out a fresh showpiece.
+"$DIR/showpiece-close" || true
 
 aerospace workspace "$WS"
 
 # Open three windows in a row: fastfetch, pipes, btop (left -> right).
 # -n forces a new window; -e runs the command. fastfetch drops to a shell
 # afterwards so its output stays on screen.
-open -na Ghostty.app --args -e zsh -lc "cd ~/dev; fastfetch; exec zsh"
+# --confirm-close-surface=false: these windows get torn down programmatically on
+# leave, so suppress Ghostty's "running process?" prompt — for THESE windows
+# only (your normal terminals keep the confirmation).
+open -na Ghostty.app --args --confirm-close-surface=false -e zsh -lc "cd ~/dev; fastfetch; exec zsh"
 sleep 0.7
-open -na Ghostty.app --args -e cava
+open -na Ghostty.app --args --confirm-close-surface=false -e cava
 sleep 0.7
-open -na Ghostty.app --args -e btop
+open -na Ghostty.app --args --confirm-close-surface=false -e btop
 sleep 1.4
 
-# Now reshape the row [fastfetch | cava | btop] into the target tree:
-# focus the middle window (cava), merge it with its left neighbor (fastfetch)
-# into one container, then stack that container vertically. btop stays as the
-# right half on its own.
-# NB: these can exit non-zero (e.g. layout already applied); don't let `set -e`
-# abort the script before the focus step below runs.
-aerospace focus left     || true   # btop -> cava
-aerospace join-with left || true   # cava + fastfetch -> one container
-aerospace layout v_tiles || true   # stack: fastfetch top, cava bottom
+# Wait until all three windows actually exist before reshaping — otherwise the
+# join/stack can run on only two and the third lands inside the stack.
+for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do
+  [ "$(aerospace list-windows --workspace "$WS" --format '%{window-id}' 2>/dev/null | grep -c .)" -ge 3 ] && break
+  sleep 0.2
+done
+
+# Build the target tree deterministically — don't rely on the workspace's
+# current orientation (a previous run can leave WS9 vertical, which would stack
+# all three). Flatten to one row, force it horizontal, then merge fastfetch+cava
+# into a vertical left column; btop stays as the right half.
+# NB: these can exit non-zero; don't let `set -e` abort before the focus below.
+aerospace flatten-workspace-tree || true
+ff="$(win_id 'zsh')";  [ -n "$ff" ] && aerospace focus --window-id "$ff" || true
+aerospace layout h_tiles || true                  # fastfetch | cava | btop (row)
+cv="$(win_id 'cava')"; [ -n "$cv" ] && aerospace focus --window-id "$cv" || true
+aerospace join-with left || true                  # fastfetch + cava -> container
+aerospace layout v_tiles || true                  # stack: fastfetch top, cava bottom
 
 # Leave focus on the fastfetch pane (reshape focus order is unreliable).
 sleep 0.3

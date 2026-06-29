@@ -12,10 +12,10 @@ enable-normalization-opposite-orientation-for-nested-containers = true
 # Reload borders when AeroSpace starts (so the glow is always on)
 after-startup-command = ['exec-and-forget borders']
 
-# Notify SketchyBar when the focused workspace changes (highlights the active space)
-exec-on-workspace-change = ['/bin/bash', '-c',
-  'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE'
-]
+# On workspace change: update the SketchyBar highlight + tear down the showpiece
+# audio (quit Background Music, restore output) when leaving WS9. See
+# bin/on-workspace-change.
+exec-on-workspace-change = ['/bin/bash', '-c', '$HOME/dev/macos-rice/bin/on-workspace-change']
 
 # Tiling gaps (the breathing room that makes a rice look clean)
 [gaps]

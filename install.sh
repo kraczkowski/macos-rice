@@ -42,7 +42,8 @@ echo "    linked cava/config"
 echo "==> Making scripts executable"
 chmod +x "$REPO"/config/sketchybar/sketchybarrc \
          "$REPO"/config/sketchybar/plugins/*.sh \
-         "$REPO"/config/borders/bordersrc
+         "$REPO"/config/borders/bordersrc \
+         "$REPO"/bin/*
 
 echo "==> Enabling starship in your shell (~/.zshrc)"
 if ! grep -q 'starship init zsh' "$HOME/.zshrc" 2>/dev/null; then

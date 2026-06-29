@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Run by AeroSpace on every workspace change (exec-on-workspace-change).
+#   1) notify SketchyBar so the active-workspace dot updates
+#   2) when LEAVING the showpiece (workspace 9), fully tear it down: close all of
+#      its windows (so WS9 ends empty and AeroSpace can't drag focus back here),
+#      and quit Background Music + restore the audio output. cava and Background
+#      Music each hold an audio input open, so both must stop for the orange mic
+#      dot to clear — bin/showpiece-close kills cava; we quit BGM here.
+set -uo pipefail
+
+DIR="$(cd "$(dirname "$0")" && pwd)"
+WS="${AEROSPACE_FOCUSED_WORKSPACE:-}"
+STATE="${TMPDIR:-/tmp}/rice_prev_output"
+
+# Keep the bar's workspace highlight working.
+sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE="$WS" 2>/dev/null || true
+
+# Act only when leaving WS9 AND a showpiece is actually up. The second test also
+# prevents re-entry: after teardown the state is gone, so the focus re-assert
+# below (which re-fires this hook) is a no-op.
+if [ "$WS" != "9" ] && { [ -f "$STATE" ] || pgrep -x cava >/dev/null 2>&1 \
+     || [ -n "$(aerospace list-windows --workspace 9 --format '%{window-id}' 2>/dev/null)" ]; }; then
+
+  "$DIR/showpiece-close"
+
+  if [ -f "$STATE" ]; then
+    prev="$(cat "$STATE")"
+    osascript -e 'tell application "Background Music" to quit' >/dev/null 2>&1 \
+      || pkill -x "Background Music" 2>/dev/null || true
+    [ -n "$prev" ] && SwitchAudioSource -t output -s "$prev" >/dev/null 2>&1 || true
+    rm -f "$STATE"
+  fi
+
+  # Tearing down WS9 windows can bounce focus back to WS9 — re-assert the
+  # workspace we actually switched to.
+  aerospace workspace "$WS" 2>/dev/null || true
+fi
