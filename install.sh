@@ -62,6 +62,13 @@ ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#7a6a5e'
 source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh 2>/dev/null
 command -v fzf >/dev/null && source <(fzf --zsh)
 source /opt/homebrew/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh 2>/dev/null
+
+# clean window titles: running program name, or "zsh" at the prompt (no folder/ghost)
+autoload -Uz add-zsh-hook
+_rice_title_precmd() { print -Pn '\e]0;zsh\a' }
+_rice_title_preexec() { print -Pn '\e]0;'"${1%% *}"'\a' }
+add-zsh-hook precmd _rice_title_precmd
+add-zsh-hook preexec _rice_title_preexec
 # <<< macos-rice shell plugins <<<
 EOF
   echo "    added plugin block to ~/.zshrc"

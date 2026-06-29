@@ -35,6 +35,7 @@ window-padding-x = 12
 window-padding-y = 12
 window-decoration = true
 macos-titlebar-style = transparent
+macos-titlebar-proxy-icon = hidden
 
 # Global dropdown terminal — summon Ghostty over any app with ctrl+`
 keybind = global:ctrl+grave_accent=toggle_quick_terminal
