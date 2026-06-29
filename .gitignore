@@ -1,3 +1,6 @@
 .DS_Store
 *.bak-*
 config/btop/btop.log
+
+# private project context — not for the public repo
+CLAUDE.md
