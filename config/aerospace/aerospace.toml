@@ -29,8 +29,8 @@ outer.right      = 8
 # Default layout for new windows: tiled, accordion as fallback
 [mode.main.binding]
 # --- Layout ---
-alt-slash = 'layout tiles horizontal vertical'   # toggle split orientation
-alt-comma = 'layout accordion horizontal vertical'
+alt-slash = 'layout tiles horizontal vertical'   # toggle split orientation (also escapes accordion -> tiles)
+alt-shift-a = 'layout accordion horizontal vertical'   # accordion on purpose (was alt-comma: too easy to fat-finger)
 
 # --- Focus (move attention between windows) ---
 alt-h = 'focus left'
