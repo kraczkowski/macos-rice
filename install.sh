@@ -48,6 +48,12 @@ ln -sfn "$REPO/config/vim/vimrc" "$HOME/.vimrc"
 mkdir -p "$HOME/.vim"
 ln -sfn "$REPO/config/vim/colors" "$HOME/.vim/colors"
 echo "    linked vimrc + vim colors"
+# vim loads anything under ~/.vim/pack/*/start on its own; lexima closes brackets and quotes
+if [ ! -d "$HOME/.vim/pack/plugins/start/lexima.vim" ]; then
+  mkdir -p "$HOME/.vim/pack/plugins/start"
+  git clone --depth 1 https://github.com/cohama/lexima.vim "$HOME/.vim/pack/plugins/start/lexima.vim"
+  echo "    installed vim plugin lexima"
+fi
 # matplotlib reads ~/.matplotlib on macOS
 mkdir -p "$HOME/.matplotlib"
 ln -sfn "$REPO/config/matplotlib/matplotlibrc" "$HOME/.matplotlib/matplotlibrc"

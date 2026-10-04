@@ -34,30 +34,119 @@ set backspace=indent,eol,start
 set hidden
 set ttimeoutlen=10                " no lag after Esc
 
+" --- quality of life ---
+" Undo history survives closing the file.
+let s:undo = expand('~/.vim/undo')
+if !isdirectory(s:undo)
+  call mkdir(s:undo, 'p', 0700)
+endif
+let &undodir = s:undo
+set undofile
+set autoread                      " reload a file that changed on disk (e.g. edited by Claude)
+set wildmenu wildoptions=pum      " Tab in the : command line opens a completion menu
+set splitbelow splitright
+packadd! comment                  " gcc comments a line in or out; gc does a selection
+packadd! hlyank                   " flash what was just yanked
+augroup rice_qol
+  autocmd!
+  autocmd FocusGained,BufEnter,CursorHold * silent! checktime
+  " Reopen a file where the cursor last was.
+  autocmd BufReadPost * if line("'\"") >= 1 && line("'\"") <= line('$') && &filetype !~# 'commit'
+        \ | execute 'normal! g`"' | endif
+augroup END
+nnoremap <silent> <Space>w :write<CR>
+" Ctrl-h/j/k/l moves between panes, including out of the run pane.
+for s:key in ['h', 'j', 'k', 'l']
+  execute 'nnoremap <C-' . s:key . '> <C-w>' . s:key
+  execute 'tnoremap <C-' . s:key . '> <C-w>' . s:key
+endfor
+" Keep the selection after indenting with < or >.
+xnoremap < <gv
+xnoremap > >gv
+
 " --- run the current Python file ---
 " Space r (or F5): save, then run it with uv in a small pane at the bottom. Vim stays usable while a
 " plot window is open, and running again closes the previous run (and its plot) first.
 let s:rice_matplotlib = fnamemodify(resolve(expand('<sfile>:p')), ':h:h') . '/matplotlib'
-function! RunPython() abort
-  write
-  let l:file = expand('%:p')
-  if exists('g:rice_run_buf') && bufexists(g:rice_run_buf)
-    execute 'bwipeout!' g:rice_run_buf
-  endif
-  botright 8new
-  " Point Python at the rice repo's plot-window backend, so it works even in a shell that predates ~/.zshrc.
-  let g:rice_run_buf = term_start(['uv', 'run', 'python', l:file],
-        \ {'curwin': 1, 'cwd': fnamemodify(l:file, ':h'), 'term_name': 'run',
-        \  'env': {'MPLBACKEND': 'module://ember_backend', 'PYTHONPATH': s:rice_matplotlib}})
-  wincmd p
-endfunction
 function! CloseRun() abort
   if exists('g:rice_run_buf') && bufexists(g:rice_run_buf)
     execute 'bwipeout!' g:rice_run_buf
   endif
 endfunction
+function! s:RunInPane(cmd, cwd, height) abort
+  call CloseRun()
+  execute 'botright' a:height . 'new'
+  " Point Python at the rice repo's plot-window backend, so it works even in a shell that predates ~/.zshrc.
+  let g:rice_run_buf = term_start(a:cmd,
+        \ {'curwin': 1, 'cwd': a:cwd, 'term_name': 'run',
+        \  'env': {'MPLBACKEND': 'module://ember_backend', 'PYTHONPATH': s:rice_matplotlib}})
+  wincmd p
+endfunction
+function! RunPython() abort
+  write
+  let l:file = expand('%:p')
+  call s:RunInPane(['uv', 'run', 'python', l:file], fnamemodify(l:file, ':h'), 8)
+endfunction
+" Space t: run the project's tests (pytest, from the nearest folder above with a pyproject.toml).
+function! RunTests() abort
+  update
+  let l:project = findfile('pyproject.toml', expand('%:p:h') . ';')
+  if empty(l:project)
+    echo 'No pyproject.toml above this file'
+    return
+  endif
+  call s:RunInPane(['uv', 'run', 'pytest', '-q'], fnamemodify(l:project, ':p:h'), 14)
+endfunction
 nnoremap <silent> <Space>r :call RunPython()<CR>
 nnoremap <silent> <F5> :call RunPython()<CR>
+nnoremap <silent> <Space>t :call RunTests()<CR>
 " Space q closes the run pane; Space / clears search highlighting.
 nnoremap <silent> <Space>q :call CloseRun()<CR>
 nnoremap <silent> <Space>/ :nohlsearch<CR>
+
+" --- format Python on save ---
+" ruff rewrites spacing, quotes and line breaks. A file with a syntax error is left as typed.
+function! s:FormatPython() abort
+  let l:old = getline(1, '$')
+  let l:new = systemlist('uvx ruff format --quiet --stdin-filename ' . shellescape(expand('%:p'))
+        \ . ' - 2>/dev/null', l:old)
+  if v:shell_error || empty(l:new) || l:new ==# l:old
+    return
+  endif
+  let l:view = winsaveview()
+  call setline(1, l:new)
+  call deletebufline('%', len(l:new) + 1, '$')
+  call winrestview(l:view)
+endfunction
+augroup rice_format
+  autocmd!
+  autocmd BufWritePre *.py call s:FormatPython()
+augroup END
+
+" --- Space ? shows the keys defined in this file ---
+let s:keys = [
+      \ 'Space r   save and run this Python file',
+      \ 'Space t   run the project''s tests',
+      \ 'Space q   close the run pane',
+      \ 'Space w   save (Python gets formatted)',
+      \ 'Space /   clear search highlighting',
+      \ 'Space ?   this list',
+      \ '',
+      \ 'gcc       comment a line in or out',
+      \ 'gc        same, for a selection',
+      \ '< >       indent a selection, keep it selected',
+      \ 'Ctrl-hjkl move between panes',
+      \ ]
+function! s:KeysFilter(id, key) abort
+  if a:key ==# "\<CursorHold>" || a:key ==# "\<FocusGained>" || a:key ==# "\<FocusLost>"
+    return 0
+  endif
+  call popup_close(a:id)
+  return 1
+endfunction
+function! RiceKeys() abort
+  call popup_create(s:keys, {'title': ' keys ', 'border': [], 'padding': [0, 1, 0, 1],
+        \ 'borderchars': ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
+        \ 'filter': function('s:KeysFilter'), 'mapping': 0})
+endfunction
+nnoremap <silent> <Space>? :call RiceKeys()<CR>
