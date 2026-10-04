@@ -1,0 +1,43 @@
+# matplotlib — Sunset Ember
+# Linked to ~/.matplotlib/matplotlibrc by install.sh, so every plot uses it with no code changes.
+# Palette mirrors config/ghostty/config.
+
+figure.facecolor:  0a1618
+axes.facecolor:    0a1618
+savefig.facecolor: 0a1618
+figure.figsize:    8, 5
+figure.dpi:        110
+figure.autolayout: True
+
+text.color:        e8d5c2
+axes.labelcolor:   e8d5c2
+axes.titlecolor:   e8d5c2
+xtick.color:       c9a892
+ytick.color:       c9a892
+axes.edgecolor:    4a3f3a
+
+font.family:        JetBrainsMono Nerd Font
+font.size:          10
+axes.titlesize:     12
+axes.titleweight:   600
+axes.titlelocation: left
+axes.titlepad:      12
+
+# ember, gold, teal, sand, olive, rose, sky
+axes.prop_cycle: cycler('color', ['d6492b', 'e8a04f', '4f9aa5', 'c9a892', '8a9560', 'b9576a', '6bb3bd'])
+lines.linewidth:   2
+lines.markersize:  5
+
+axes.grid:         True
+axes.axisbelow:    True
+grid.color:        162930
+grid.linewidth:    1
+axes.spines.top:   False
+axes.spines.right: False
+xtick.major.size:  0
+ytick.major.size:  0
+
+legend.frameon:    False
+
+# No button bar under the plot.
+toolbar: None

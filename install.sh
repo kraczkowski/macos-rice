@@ -39,6 +39,20 @@ mkdir -p "$CONFIG/cava"
 ln -sfn "$REPO/config/cava/config" "$CONFIG/cava/config"
 echo "    linked cava/config"
 
+# vim reads ~/.vimrc and ~/.vim/colors, not ~/.config
+if [ -e "$HOME/.vimrc" ] && [ ! -L "$HOME/.vimrc" ]; then
+  echo "    backing up existing ~/.vimrc -> ~/.vimrc.bak-$STAMP"
+  mv "$HOME/.vimrc" "$HOME/.vimrc.bak-$STAMP"
+fi
+ln -sfn "$REPO/config/vim/vimrc" "$HOME/.vimrc"
+mkdir -p "$HOME/.vim"
+ln -sfn "$REPO/config/vim/colors" "$HOME/.vim/colors"
+echo "    linked vimrc + vim colors"
+# matplotlib reads ~/.matplotlib on macOS
+mkdir -p "$HOME/.matplotlib"
+ln -sfn "$REPO/config/matplotlib/matplotlibrc" "$HOME/.matplotlib/matplotlibrc"
+echo "    linked matplotlibrc"
+
 echo "==> Making scripts executable"
 chmod +x "$REPO"/config/sketchybar/sketchybarrc \
          "$REPO"/config/sketchybar/plugins/*.sh \
@@ -75,6 +89,21 @@ EOF
   echo "    added plugin block to ~/.zshrc"
 else
   echo "    plugin block already in ~/.zshrc"
+fi
+
+echo "==> Enabling the see-through matplotlib windows (~/.zshrc)"
+if ! grep -q 'macos-rice matplotlib' "$HOME/.zshrc" 2>/dev/null; then
+  cat >> "$HOME/.zshrc" <<'EOF'
+
+# >>> macos-rice matplotlib >>>
+# Managed by ~/dev/macos-rice/install.sh. Plot windows use the Ghostty-style backend in the rice repo.
+export PYTHONPATH="$HOME/dev/macos-rice/config/matplotlib${PYTHONPATH:+:$PYTHONPATH}"
+export MPLBACKEND="module://ember_backend"
+# <<< macos-rice matplotlib <<<
+EOF
+  echo "    added matplotlib block to ~/.zshrc"
+else
+  echo "    matplotlib block already in ~/.zshrc"
 fi
 
 echo "==> Silencing the 'Last login' banner (~/.hushlogin)"

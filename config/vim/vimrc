@@ -1,0 +1,63 @@
+" Vim — Sunset Ember
+" Linked to ~/.vimrc by install.sh; the colour scheme lives in ~/.vim/colors.
+
+set nocompatible
+set encoding=utf-8
+scriptencoding utf-8
+filetype plugin indent on
+syntax on
+
+" --- look ---
+set termguicolors                 " 24-bit colour, so the theme's exact hex values are used
+colorscheme sunset_ember
+set number cursorline
+set laststatus=2 noshowmode       " always show the status line; it already shows the mode
+set scrolloff=5
+set fillchars=vert:│
+" Thin bar while typing, block otherwise (matches Ghostty's bar cursor).
+let &t_SI = "\e[6 q"
+let &t_EI = "\e[2 q"
+
+let s:modes = {'n': 'NORMAL', 'i': 'INSERT', 'v': 'VISUAL', 'V': 'V-LINE', "\<C-v>": 'V-BLOCK',
+      \ 'R': 'REPLACE', 'c': 'COMMAND', 't': 'TERMINAL'}
+function! RiceMode() abort
+  return get(s:modes, mode(), mode())
+endfunction
+set statusline=%1*\ %{RiceMode()}\ %*\ %f\ %m%=%2*%{&filetype}\ \ %l:%c\ 
+
+" --- editing ---
+set expandtab shiftwidth=4 softtabstop=4 autoindent
+set incsearch hlsearch ignorecase smartcase
+set mouse=a
+set clipboard=unnamed             " yank and paste use the macOS clipboard
+set backspace=indent,eol,start
+set hidden
+set ttimeoutlen=10                " no lag after Esc
+
+" --- run the current Python file ---
+" Space r (or F5): save, then run it with uv in a small pane at the bottom. Vim stays usable while a
+" plot window is open, and running again closes the previous run (and its plot) first.
+let s:rice_matplotlib = fnamemodify(resolve(expand('<sfile>:p')), ':h:h') . '/matplotlib'
+function! RunPython() abort
+  write
+  let l:file = expand('%:p')
+  if exists('g:rice_run_buf') && bufexists(g:rice_run_buf)
+    execute 'bwipeout!' g:rice_run_buf
+  endif
+  botright 8new
+  " Point Python at the rice repo's plot-window backend, so it works even in a shell that predates ~/.zshrc.
+  let g:rice_run_buf = term_start(['uv', 'run', 'python', l:file],
+        \ {'curwin': 1, 'cwd': fnamemodify(l:file, ':h'), 'term_name': 'run',
+        \  'env': {'MPLBACKEND': 'module://ember_backend', 'PYTHONPATH': s:rice_matplotlib}})
+  wincmd p
+endfunction
+function! CloseRun() abort
+  if exists('g:rice_run_buf') && bufexists(g:rice_run_buf)
+    execute 'bwipeout!' g:rice_run_buf
+  endif
+endfunction
+nnoremap <silent> <Space>r :call RunPython()<CR>
+nnoremap <silent> <F5> :call RunPython()<CR>
+" Space q closes the run pane; Space / clears search highlighting.
+nnoremap <silent> <Space>q :call CloseRun()<CR>
+nnoremap <silent> <Space>/ :nohlsearch<CR>
