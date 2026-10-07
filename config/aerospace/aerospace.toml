@@ -125,14 +125,13 @@ if.app-id = 'com.spotify.client'
 run = 'move-node-to-workspace 5'
 
 # 6 · system: Finder and System Settings, one key away and out of the way.
-# Both float: neither behaves when tiled (Settings has a fixed width).
 [[on-window-detected]]
 if.app-id = 'com.apple.finder'
-run = ['layout floating', 'move-node-to-workspace 6']
+run = 'move-node-to-workspace 6'
 
 [[on-window-detected]]
 if.app-id = 'com.apple.systempreferences'
-run = ['layout floating', 'move-node-to-workspace 6']
+run = 'move-node-to-workspace 6'
 
 # Float apps that misbehave when tiled
 [[on-window-detected]]
