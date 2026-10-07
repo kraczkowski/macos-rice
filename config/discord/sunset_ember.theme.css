@@ -34,6 +34,17 @@
   --mention-foreground: #{{gold}} !important;
   --mention-background: #{{mahogany}} !important;
   --brand-500: #{{ember}} !important;
+  --background-brand: #{{ember}} !important;
+  --text-brand: #{{flame}} !important;
+  --text-subtle: #{{sand}} !important;
+  --control-primary-background-default: #{{ember}} !important;
+  --control-primary-background-hover: #{{flame}} !important;
+  --control-primary-background-active: #{{oxide}} !important;
+  --interactive-background-hover: #{{surface}}80 !important;
+  --interactive-background-selected: #{{line}}80 !important;
+  --interactive-text-default: #{{sand}} !important;
+  --interactive-text-hover: #{{text}} !important;
+  --interactive-text-active: #{{cream}} !important;
   --brand-560: #{{oxide}} !important;
   --brand-360: #{{flame}} !important;
 
