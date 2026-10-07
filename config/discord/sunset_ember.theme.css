@@ -48,6 +48,28 @@
   --font-code: "{{font}}", monospace;
 }
 
+/* Glass, as in the terminal: needs "macosVibrancyStyle": "under-window" in Vesktop's
+   settings/settings.json, which lets macOS blur what lies behind. The window gets one tint of the
+   base colour and the panes inside it are clear; menus and dialogs use the surface colours and stay solid. */
+html,
+#app-mount {
+  background: transparent !important;
+}
+
+body {
+  background: color-mix(in srgb, #{{base}} calc({{opacity}} * 100%), transparent) !important;
+}
+
+.theme-dark,
+.visual-refresh.theme-dark {
+  --background-base-lowest: transparent;
+  --background-base-lower: transparent;
+  --background-base-low: transparent;
+  --background-primary: transparent;
+  --background-secondary: transparent;
+  --background-tertiary: transparent;
+}
+
 ::selection {
   background: #{{mahogany}};
 }
