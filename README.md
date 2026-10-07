@@ -74,13 +74,20 @@ The GUI apps take the theme from the same `theme.ini`, each in the one way it al
 | VS Code | a local theme extension (`config/vscode/`) | `cmd+k cmd+t` → Sunset Ember |
 | Obsidian | a CSS snippet, linked into every vault | Settings → Appearance → CSS snippets, and Translucent window for the glass |
 | Firefox | `userChrome.css`, linked into every profile | restart Firefox |
-| Discord | a Vencord theme, loaded by Vesktop | Settings → Vencord → Themes |
+| Discord | a Vencord theme, loaded by Vesktop | Settings → Vencord → Themes; for the glass, `"macosVibrancyStyle": "fullscreen-ui"` in Vesktop's `settings/settings.json` |
 | Raycast | a theme link (`config/raycast/import`), needs Raycast Pro | run `build/raycast/import`, confirm in Raycast |
 | qBittorrent | colours laid over its built-in theme (`config/qbittorrent/`) | restart qBittorrent |
 | Spotify | a spicetify colour scheme, written into Spotify.app | — (after a Spotify update: `spicetify apply`) |
 
 Vesktop and spicetify are unofficial: Discord's terms do not allow modified clients, and
 spicetify patches Spotify.app. The stock Discord app stays installed and untouched.
+
+## Next
+
+Make the workflow feel more like a tiling desktop, in the manner of [niri](https://github.com/YaLTeR/niri):
+windows in a strip that scrolls sideways instead of shrinking to fit the screen. AeroSpace has no
+such layout; [PaperWM.spoon](https://github.com/mogenson/PaperWM.spoon) is the macOS take on it and
+the first thing to try.
 
 ## Keybindings
 

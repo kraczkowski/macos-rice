@@ -60,7 +60,7 @@
   --font-code: "{{font}}", monospace !important;
 }
 
-/* Glass, as in the terminal: needs "macosVibrancyStyle": "under-window" in Vesktop's
+/* Glass, as in the terminal: needs "macosVibrancyStyle": "fullscreen-ui" in Vesktop's
    settings/settings.json, which lets macOS blur what lies behind. The window gets one tint of the
    base colour and the panes inside it are clear; menus and dialogs use the surface colours and stay solid. */
 html,

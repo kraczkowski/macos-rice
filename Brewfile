@@ -33,6 +33,7 @@ brew "uv"
 
 # --- App themes ---
 brew "spicetify-cli"               # writes the theme into Spotify
+cask "zen"                         # Firefox fork with a see-through window built in
 cask "vesktop"                     # Discord with Vencord built in: loads the theme, survives Discord updates
 
 # --- Launcher (already installed as app, listed for portability) ---
