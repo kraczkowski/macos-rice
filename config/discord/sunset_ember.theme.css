@@ -1,0 +1,53 @@
+/**
+ * @name Sunset Ember
+ * @description Dark teal and sunset reds. The colours are named in theme.ini of macos-rice.
+ * @version 1.0.0
+ */
+
+/* Loaded by Vesktop (Discord with Vencord built in). Switch on once: Settings > Vencord > Themes.
+   Discord renames these variables now and then: the first block is its current look, the second
+   the one before it. */
+
+.theme-dark,
+.visual-refresh.theme-dark {
+  --background-base-lowest: #{{base}};
+  --background-base-lower: #{{base}};
+  --background-base-low: #{{base}};
+  --background-surface-high: #{{surface}};
+  --background-surface-higher: #{{surface}};
+  --background-surface-highest: #{{line}};
+  --background-mod-subtle: #{{surface}};
+  --background-mod-normal: #{{line}};
+  --border-subtle: #{{line}};
+  --border-normal: #{{line}};
+  --text-default: #{{text}};
+  --text-strong: #{{cream}};
+  --text-muted: #{{muted}};
+  --text-link: #{{sky}};
+  --channels-default: #{{sand}};
+  --interactive-normal: #{{sand}};
+  --interactive-hover: #{{text}};
+  --interactive-active: #{{cream}};
+  --header-primary: #{{cream}};
+  --header-secondary: #{{sand}};
+  --mention-foreground: #{{gold}};
+  --mention-background: #{{mahogany}};
+  --brand-500: #{{ember}};
+  --brand-560: #{{oxide}};
+  --brand-360: #{{flame}};
+
+  --background-primary: #{{base}};
+  --background-secondary: #{{base}};
+  --background-secondary-alt: #{{surface}};
+  --background-tertiary: #{{base}};
+  --background-floating: #{{surface}};
+  --background-modifier-hover: #{{surface}};
+  --background-modifier-selected: #{{line}};
+  --channeltextarea-background: #{{surface}};
+  --text-normal: #{{text}};
+  --font-code: "{{font}}", monospace;
+}
+
+::selection {
+  background: #{{mahogany}};
+}

@@ -1,0 +1,6 @@
+#!/bin/bash
+# Sunset Ember for Raycast. Raycast keeps its themes inside the app, so the theme goes in as a link
+# that Raycast asks about once (custom themes need Raycast Pro). After a change to theme.ini, run again.
+# The colours in order: background, its second tone, text, selection, loader,
+# then red, orange, yellow, green, blue, purple, magenta.
+open "raycast://theme?version=1&appearance=dark&name=Sunset%20Ember&colors=%23{{base}},%23{{base}},%23{{text}},%23{{ember}},%23{{ember}},%23{{flame}},%23{{orange}},%23{{gold}},%23{{olive}},%23{{steel}},%23{{berry}},%23{{rose}}"

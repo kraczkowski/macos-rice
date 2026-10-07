@@ -1,0 +1,5 @@
+#!/bin/bash
+# The two things a native app (Finder, System Settings, Safari) takes from a theme: the accent
+# and the selection colour. An app shows them when next started.
+defaults write -g AppleAccentColor -int 0   # red: the nearest of the eight macOS offers
+defaults write -g AppleHighlightColor -string "{{mahogany|float}} Other"

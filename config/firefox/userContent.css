@@ -1,0 +1,13 @@
+/* Sunset Ember for Firefox's own pages, so a new tab does not flash grey. Websites are untouched. */
+
+@-moz-document url-prefix("about:newtab"), url-prefix("about:home"), url-prefix("about:privatebrowsing"), url("about:blank") {
+  :root,
+  body {
+    --newtab-background-color: #{{base}} !important;
+    --newtab-background-color-secondary: #{{surface}} !important;
+    --newtab-text-primary-color: #{{text}} !important;
+    --newtab-primary-action-background: #{{ember}} !important;
+    background-color: #{{base}} !important;
+    color: #{{text}} !important;
+  }
+}

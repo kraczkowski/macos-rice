@@ -4,6 +4,7 @@
 A template names a value instead of typing it:
     {{ember}}       b33219          (a template adds its own prefix: #{{ember}}, 0xff{{ember}})
     {{ember|rgb}}   179;50;25       (the form fastfetch wants)
+    {{ember|float}} 0.702 0.196 0.098   (the form macOS defaults wants)
     {{font}}        any other value of theme.ini, as typed there
     {{repo}}        the folder this repo is in
 
@@ -22,7 +23,7 @@ TEMPLATES = REPO / "config"
 BUILD = REPO / "build"
 MANIFEST = BUILD / ".rendered"  # what the last run wrote, one path per line
 
-NAME = re.compile(r"\{\{(\w+)(\|rgb)?\}\}")
+NAME = re.compile(r"\{\{(\w+)(?:\|(rgb|float))?\}\}")
 COLOUR = re.compile(r"[0-9a-f]{6}")
 TYPED = re.compile(r"(?:#|0x[0-9a-f]{2})([0-9a-f]{6})\b", re.IGNORECASE)
 
@@ -51,6 +52,11 @@ def rgb(colour):
     return ";".join(str(int(colour[i : i + 2], 16)) for i in (0, 2, 4))
 
 
+def floats(colour):
+    """b33219 -> 0.702 0.196 0.098"""
+    return " ".join(f"{int(colour[i : i + 2], 16) / 255:.3f}" for i in (0, 2, 4))
+
+
 def typed(text, values):
     """The colours a template types out: any #rrggbb or 0xaarrggbb, and any colour of the theme."""
     colours = {value for value in values.values() if COLOUR.fullmatch(value)}
@@ -60,12 +66,12 @@ def typed(text, values):
 
 def render(text, values, file):
     def value(match):
-        name, as_rgb = match.groups()
+        name, form = match.groups()
         if name not in values:
             sys.exit(f"{file}: names {{{{{name}}}}}, which theme.ini does not have")
-        if as_rgb and not COLOUR.fullmatch(values[name]):
-            sys.exit(f"{file}: {{{{{name}|rgb}}}} needs a colour, and '{values[name]}' is not one")
-        return rgb(values[name]) if as_rgb else values[name]
+        if form and not COLOUR.fullmatch(values[name]):
+            sys.exit(f"{file}: {{{{{name}|{form}}}}} needs a colour, and '{values[name]}' is not one")
+        return {"rgb": rgb, "float": floats, None: str}[form](values[name])
 
     return NAME.sub(value, text)
 

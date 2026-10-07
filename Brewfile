@@ -31,5 +31,9 @@ cask "font-jetbrains-mono-nerd-font"
 # --- Python from Vim (Space r runs a file, Space t the tests, saving formats) ---
 brew "uv"
 
+# --- App themes ---
+brew "spicetify-cli"               # writes the theme into Spotify
+cask "vesktop"                     # Discord with Vencord built in: loads the theme, survives Discord updates
+
 # --- Launcher (already installed as app, listed for portability) ---
 cask "raycast"

@@ -17,6 +17,7 @@ No SIP disable required.
 | [Starship](https://starship.rs) | Shell prompt |
 | btop · fastfetch · cava | Resource monitor · system info · audio visualizer |
 | Vim · matplotlib | Editor and plot windows in the same look |
+| VS Code · Obsidian · Firefox · Vesktop (Discord) · Spotify | The same colours, each through its own theme file |
 | [Raycast](https://raycast.com) | Launcher |
 
 ## Theme — Sunset Ember
@@ -62,6 +63,23 @@ Manual steps it can't do for you:
   (System Settings → Privacy & Security → Accessibility).
 - The `background-music` cask needs your password — run
   `brew install --cask background-music` in your own terminal if the bundle skips it.
+
+## Apps
+
+The GUI apps take the theme from the same `theme.ini`, each in the one way it allows:
+
+| App | What carries the theme | Switch it on once |
+|-----|------------------------|-------------------|
+| Finder, System Settings, native apps | accent and selection colour (`config/macos/accent`) | restart the app |
+| VS Code | a local theme extension (`config/vscode/`) | `cmd+k cmd+t` → Sunset Ember |
+| Obsidian | a CSS snippet, linked into every vault | Settings → Appearance → CSS snippets |
+| Firefox | `userChrome.css`, linked into every profile | restart Firefox |
+| Discord | a Vencord theme, loaded by Vesktop | Settings → Vencord → Themes |
+| Raycast | a theme link (`config/raycast/import`), needs Raycast Pro | run `build/raycast/import`, confirm in Raycast |
+| Spotify | a spicetify colour scheme, written into Spotify.app | — (after a Spotify update: `spicetify apply`) |
+
+Vesktop and spicetify are unofficial: Discord's terms do not allow modified clients, and
+spicetify patches Spotify.app. The stock Discord app stays installed and untouched.
 
 ## Keybindings
 
@@ -121,6 +139,7 @@ config/<tool>/    each tool's config, naming the theme's values
 build/<tool>/     the rendered configs ~/.config links to (not in git)
 bin/render        theme.ini + config/ -> build/
 bin/apply         render, then reload what is running
+bin/apply-apps    the macOS accent and the VS Code theme, which keep a copy of their own
 bin/showpiece     the three-window showcase: up | down | leave <workspace>
 bin/on-workspace-change   run by AeroSpace: the bar's dot, and taking the showpiece down
 Brewfile          install manifest (brew bundle)

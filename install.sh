@@ -37,6 +37,37 @@ link vim/colors              "$HOME/.vim/colors"
 link vim/plugin              "$HOME/.vim/plugin"
 link matplotlib/matplotlibrc "$HOME/.matplotlib/matplotlibrc"
 
+echo "==> Linking the app themes"
+link discord/sunset_ember.theme.css "$HOME/Library/Application Support/vesktop/themes/sunset_ember.theme.css"
+link spicetify/Themes/SunsetEmber   "$HOME/.config/spicetify/Themes/SunsetEmber"
+
+# Obsidian keeps its snippets per vault, and lists its vaults in obsidian.json.
+python3 -c 'import json, sys; [print(v["path"]) for v in json.load(open(sys.argv[1]))["vaults"].values()]' \
+  "$HOME/Library/Application Support/obsidian/obsidian.json" 2>/dev/null |
+while read -r vault; do
+  [ -d "$vault/.obsidian" ] && link obsidian/sunset_ember.css "$vault/.obsidian/snippets/sunset_ember.css"
+done
+
+# Firefox reads userChrome.css only from a profile that has this preference on.
+PREF='user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);'
+for profile in "$HOME/Library/Application Support/Firefox/Profiles"/*/; do
+  [ -d "$profile" ] || continue
+  link firefox/userChrome.css  "${profile}chrome/userChrome.css"
+  link firefox/userContent.css "${profile}chrome/userContent.css"
+  grep -qF "$PREF" "${profile}user.js" 2>/dev/null || echo "$PREF" >> "${profile}user.js"
+done
+
+echo "==> Setting the macOS accent and installing the VS Code theme"
+"$REPO/bin/apply-apps"
+
+# spicetify writes the theme into Spotify.app itself; a Spotify update undoes it until the next apply.
+if command -v spicetify >/dev/null; then
+  echo "==> Writing the theme into Spotify"
+  spicetify config current_theme SunsetEmber color_scheme ember inject_css 0 replace_colors 1 >/dev/null || true
+  spicetify apply || spicetify backup apply || \
+    echo "    (open Spotify once and sign in, then run: spicetify backup apply)"
+fi
+
 # vim loads anything under ~/.vim/pack/*/start on its own; lexima closes brackets and quotes
 if [ ! -d "$HOME/.vim/pack/plugins/start/lexima.vim" ]; then
   echo "==> Installing the vim plugin lexima"
@@ -74,4 +105,10 @@ brew services start borders 2>/dev/null || true
 echo ""
 echo "Done. Final manual step: open AeroSpace.app once and grant Accessibility"
 echo "permission (System Settings > Privacy & Security > Accessibility)."
+echo "Switch each app theme on once:"
+echo "  VS Code   cmd+k cmd+t > Sunset Ember"
+echo "  Obsidian  Settings > Appearance > CSS snippets > sunset_ember"
+echo "  Vesktop   Settings > Vencord > Themes > Sunset Ember"
+echo "  Firefox   restart it"
+echo "  Raycast   build/raycast/import  (needs Raycast Pro)"
 echo "After a change to theme.ini or config/:  bin/apply"

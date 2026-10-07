@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# apply-apps — hand the rendered theme to the apps that keep a copy of their own, where a link
+# into build/ is not enough. Run by install.sh and bin/apply, after bin/render.
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+BUILD="$REPO/build"
+
+"$BUILD/macos/accent"
+
+# VS Code copies an extension when it installs one, so the theme is installed again each time.
+# A .vsix is a zip of build/vscode.
+code="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
+if [ -x "$code" ]; then
+  rm -f "$BUILD/sunset-ember.vsix"
+  (cd "$BUILD/vscode" && zip -qr "$BUILD/sunset-ember.vsix" .)
+  "$code" --install-extension "$BUILD/sunset-ember.vsix" --force >/dev/null
+fi

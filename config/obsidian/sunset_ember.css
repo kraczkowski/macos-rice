@@ -1,0 +1,32 @@
+/* Sunset Ember for Obsidian. The colours are named in theme.ini.
+   Switch on once: Settings > Appearance > CSS snippets. Needs the dark base colour scheme. */
+
+.theme-dark {
+  --background-primary: #{{base}};
+  --background-primary-alt: #{{surface}};
+  --background-secondary: #{{base}};
+  --background-secondary-alt: #{{surface}};
+  --background-modifier-border: #{{line}};
+  --background-modifier-hover: #{{surface}};
+  --titlebar-background: #{{base}};
+  --titlebar-background-focused: #{{base}};
+  --ribbon-background: #{{base}};
+  --tab-container-background: #{{base}};
+
+  --text-normal: #{{text}};
+  --text-muted: #{{sand}};
+  --text-faint: #{{muted}};
+  --text-accent: #{{flame}};
+  --text-accent-hover: #{{gold}};
+  --text-on-accent: #{{cream}};
+  --text-selection: #{{mahogany}};
+  --link-color: #{{sky}};
+  --link-external-color: #{{sky}};
+
+  --interactive-accent: #{{ember}};
+  --interactive-accent-hover: #{{flame}};
+
+  --code-normal: #{{gold}};
+  --code-background: #{{surface}};
+  --font-monospace-theme: "{{font}}";
+}

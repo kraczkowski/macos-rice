@@ -1,0 +1,47 @@
+/* Sunset Ember for Firefox's own frame: tabs, toolbar, address bar, menus.
+   The colours are named in theme.ini. Firefox reads this only with
+   toolkit.legacyUserProfileCustomizations.stylesheets on, which install.sh sets in user.js. */
+
+:root {
+  --lwt-accent-color: #{{base}} !important;
+  --lwt-accent-color-inactive: #{{base}} !important;
+  --lwt-text-color: #{{text}} !important;
+  --toolbox-bgcolor: #{{base}} !important;
+  --toolbox-bgcolor-inactive: #{{base}} !important;
+  --toolbox-textcolor: #{{text}} !important;
+  --toolbar-bgcolor: #{{base}} !important;
+  --toolbar-color: #{{text}} !important;
+  --toolbarbutton-icon-fill: #{{linen}} !important;
+  --chrome-content-separator-color: #{{line}} !important;
+
+  --tab-selected-bgcolor: #{{surface}} !important;
+  --tab-selected-textcolor: #{{cream}} !important;
+  --tab-loading-fill: #{{ember}} !important;
+
+  --toolbar-field-background-color: #{{surface}} !important;
+  --toolbar-field-color: #{{text}} !important;
+  --toolbar-field-border-color: transparent !important;
+  --toolbar-field-focus-background-color: #{{surface}} !important;
+  --toolbar-field-focus-color: #{{cream}} !important;
+  --toolbar-field-focus-border-color: #{{ember}} !important;
+  --focus-outline-color: #{{ember}} !important;
+  --urlbarView-highlight-background: #{{mahogany}} !important;
+  --urlbarView-highlight-color: #{{cream}} !important;
+  --urlbar-popup-url-color: #{{sky}} !important;
+
+  --arrowpanel-background: #{{surface}} !important;
+  --arrowpanel-color: #{{text}} !important;
+  --arrowpanel-border-color: #{{line}} !important;
+  --sidebar-background-color: #{{base}} !important;
+  --sidebar-text-color: #{{text}} !important;
+}
+
+#navigator-toolbox {
+  background-color: #{{base}} !important;
+  color: #{{text}} !important;
+  border-bottom-color: #{{line}} !important;
+}
+
+::selection {
+  background-color: #{{mahogany}} !important;
+}
