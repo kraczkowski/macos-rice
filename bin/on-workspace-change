@@ -8,6 +8,8 @@ WS="${AEROSPACE_FOCUSED_WORKSPACE:-}"
 # The bar's dot for the active workspace.
 sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE="$WS" 2>/dev/null
 
+[ -n "$WS" ] || exit 0
+
 # Leaving the showpiece takes it down. Closing its windows can pull focus back to its
 # workspace, so say again where we were going.
 "$DIR/showpiece" leave "$WS" && aerospace workspace "$WS" 2>/dev/null

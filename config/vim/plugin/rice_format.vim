@@ -1,8 +1,9 @@
 " Format Python on save.
 " ruff rewrites spacing, quotes and line breaks. A file with a syntax error is left as typed.
+" --offline: a save never waits for the network. install.sh fetches ruff once.
 function! s:FormatPython() abort
   let l:old = getline(1, '$')
-  let l:new = systemlist('uvx ruff format --quiet --stdin-filename ' . shellescape(expand('%:p'))
+  let l:new = systemlist('uvx --offline ruff format --quiet --stdin-filename ' . shellescape(expand('%:p'))
         \ . ' - 2>/dev/null', l:old)
   if v:shell_error || empty(l:new) || l:new ==# l:old
     return

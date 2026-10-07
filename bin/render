@@ -20,6 +20,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 TEMPLATES = REPO / "config"
 BUILD = REPO / "build"
+MANIFEST = BUILD / ".rendered"  # what the last run wrote, one path per line
 
 NAME = re.compile(r"\{\{(\w+)(\|rgb)?\}\}")
 COLOUR = re.compile(r"[0-9a-f]{6}")
@@ -28,14 +29,20 @@ TYPED = re.compile(r"(?:#|0x[0-9a-f]{2})([0-9a-f]{6})\b", re.IGNORECASE)
 
 def theme():
     """Every value of theme.ini by its name. The sections only group them for the reader."""
-    ini = configparser.ConfigParser(inline_comment_prefixes=("#",))
-    ini.read(REPO / "theme.ini", encoding="utf-8")
+    ini = configparser.ConfigParser(inline_comment_prefixes=("#",), interpolation=None)
+    try:
+        ini.read(REPO / "theme.ini", encoding="utf-8")
+    except configparser.DuplicateOptionError as error:
+        sys.exit(f"theme.ini: '{error.option}' is there twice")
+    except configparser.Error as error:
+        sys.exit(f"theme.ini: {error}")
     values = {"repo": str(REPO)}
     for section in ini.sections():
         for name, value in ini[section].items():
             if name in values:
                 sys.exit(f"theme.ini: '{name}' is there twice")
-            values[name] = value
+            # B33219 and b33219 are the same colour; the checks below know the second form.
+            values[name] = value.lower() if COLOUR.fullmatch(value.lower()) else value
     return values
 
 
@@ -56,6 +63,8 @@ def render(text, values, file):
         name, as_rgb = match.groups()
         if name not in values:
             sys.exit(f"{file}: names {{{{{name}}}}}, which theme.ini does not have")
+        if as_rgb and not COLOUR.fullmatch(values[name]):
+            sys.exit(f"{file}: {{{{{name}|rgb}}}} needs a colour, and '{values[name]}' is not one")
         return rgb(values[name]) if as_rgb else values[name]
 
     return NAME.sub(value, text)
@@ -66,7 +75,11 @@ def main():
     templates = [file for file in sorted(TEMPLATES.rglob("*")) if file.is_file() and file.name != ".DS_Store" and "__pycache__" not in file.parts]
     problems, rendered = [], {}
     for file in templates:
-        text = file.read_text(encoding="utf-8")
+        try:
+            text = file.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            rendered[file] = None  # not text (an image, say): copied as it is
+            continue
         problems += [f"{file.relative_to(REPO)}: types {colour}, name it instead" for colour in typed(text, values)]
         rendered[file] = render(text, values, file.relative_to(REPO))
     if problems:
@@ -74,8 +87,20 @@ def main():
     for file, text in rendered.items():
         out = BUILD / file.relative_to(TEMPLATES)
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(text, encoding="utf-8")
+        if text is None:
+            shutil.copyfile(file, out)
+        else:
+            out.write_text(text, encoding="utf-8")
         shutil.copymode(file, out)
+
+    # A template that was deleted or renamed must not live on in build/, where its tool would
+    # still load it. Only files an earlier run wrote are removed: tools keep files of their own
+    # there too (btop its log).
+    written = {str(file.relative_to(TEMPLATES)) for file in rendered}
+    before = set(MANIFEST.read_text(encoding="utf-8").splitlines()) if MANIFEST.exists() else set()
+    for gone in before - written:
+        (BUILD / gone).unlink(missing_ok=True)
+    MANIFEST.write_text("\n".join(sorted(written)) + "\n", encoding="utf-8")
     print(f"rendered {len(templates)} files into {BUILD}")
 
 

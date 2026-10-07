@@ -13,7 +13,12 @@ function! s:RunInPane(cmd, cwd, height) abort
   " Point Python at the rice repo's plot-window backend, so it works even in a shell that predates ~/.zshrc.
   let g:rice_run_buf = term_start(a:cmd,
         \ {'curwin': 1, 'cwd': a:cwd, 'term_name': 'run',
-        \  'env': {'MPLBACKEND': 'module://ember_backend', 'PYTHONPATH': s:rice_matplotlib}})
+        \  'env': {'MPLBACKEND': 'module://ember_backend',
+        \          'PYTHONPATH': s:rice_matplotlib . (empty($PYTHONPATH) ? '' : ':' . $PYTHONPATH)}})
+  " Ctrl-h/j/k/l leaves this pane. Only here: in any other terminal they stay the shell's keys.
+  for l:key in ['h', 'j', 'k', 'l']
+    execute 'tnoremap <buffer> <C-' . l:key . '> <C-w>' . l:key
+  endfor
   wincmd p
 endfunction
 function! RunPython() abort

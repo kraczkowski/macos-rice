@@ -20,7 +20,9 @@ WS=9
 STATE="${TMPDIR:-/tmp}/rice_showpiece"
 
 windows() { aerospace list-windows --workspace "$WS" --format '%{window-id}' 2>/dev/null; }
-alive()   { aerospace list-windows --all --format '%{window-id}' 2>/dev/null | grep -qx "$1"; }
+# alive <id>: the window is there and is Ghostty's. $STATE can outlive a logout, after which
+# macOS hands the same ids to other windows; those must never be closed.
+alive()   { aerospace list-windows --all --format '%{window-id} %{app-bundle-id}' 2>/dev/null | grep -qx "$1 com.mitchellh.ghostty"; }
 
 # wait_until <command...>: try for up to three seconds.
 wait_until() {
@@ -34,10 +36,13 @@ wait_until() {
 # open_pane <command...>: run it in a new Ghostty window and print that window's id.
 # --confirm-close-surface=false: `down` closes these windows while their program still runs,
 # so Ghostty must not ask "close anyway?" — for these windows only.
+# Each pane is a Ghostty of its own (open -n); without the unbind every one of them would
+# answer ctrl+` with a quick terminal.
 open_pane() {
   local before id=""
   before="$(windows)"
-  open -na Ghostty.app --args --confirm-close-surface=false -e "$@"
+  open -na Ghostty.app --args --confirm-close-surface=false \
+    --keybind=global:ctrl+grave_accent=unbind -e "$@"
   new_window() { id="$(windows | grep -vxF -e "$before" | head -1)"; [ -n "$id" ]; }
   wait_until new_window
   echo "$id"
@@ -61,6 +66,12 @@ sound_back_to() {
 }
 
 up() {
+  # $STATE is written only once all three windows are open, so a second press in the meantime
+  # would open three more. A lock older than a minute was left by a run that was killed.
+  find "$STATE.lock" -maxdepth 0 -mmin +1 -exec rmdir {} \; 2>/dev/null
+  mkdir "$STATE.lock" 2>/dev/null || return 0
+  trap 'rmdir "$STATE.lock" 2>/dev/null' EXIT
+
   if [ -f "$STATE" ]; then
     local shown; shown="$(sed -n 2p "$STATE")"
     if alive "$shown"; then
@@ -99,7 +110,7 @@ down() {
   rm -f "$STATE"   # first, so the workspace changes that closing causes find nothing to take down
 
   for id in $ids; do
-    aerospace close --window-id "$id" 2>/dev/null
+    alive "$id" && aerospace close --window-id "$id" 2>/dev/null
   done
   all_closed() { for id in $ids; do alive "$id" && return 1; done; return 0; }
   wait_until all_closed

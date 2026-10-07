@@ -54,10 +54,9 @@ augroup rice_qol
   autocmd BufReadPost * if line("'\"") >= 1 && line("'\"") <= line('$') && &filetype !~# 'commit'
         \ | execute 'normal! g`"' | endif
 augroup END
-" Ctrl-h/j/k/l moves between panes, including out of the run pane.
+" Ctrl-h/j/k/l moves between panes (rice_run.vim adds the way out of the run pane).
 for s:key in ['h', 'j', 'k', 'l']
   execute 'nnoremap <C-' . s:key . '> <C-w>' . s:key
-  execute 'tnoremap <C-' . s:key . '> <C-w>' . s:key
 endfor
 " Keep the selection after indenting with < or >.
 xnoremap < <gv

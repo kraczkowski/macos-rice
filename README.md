@@ -73,8 +73,8 @@ AeroSpace uses `alt` as the modifier.
 | `alt-shift-h/j/k/l` | Move window |
 | `alt-minus` / `alt-equal` | Resize smaller / larger |
 | `alt-slash` | Toggle split orientation |
-| `alt-1…5`, `alt-9` | Switch workspace |
-| `alt-shift-1…5`, `alt-shift-9` | Send window to workspace |
+| `alt-1…6`, `alt-9` | Switch workspace |
+| `alt-shift-1…6`, `alt-shift-9` | Send window to workspace |
 | `alt-tab` | Previous workspace |
 | `alt-f` | Fullscreen |
 | `alt-shift-space` | Toggle float / tile |
@@ -82,7 +82,7 @@ AeroSpace uses `alt` as the modifier.
 | `alt-shift-;` | Service mode (reload config, reset layout, …) |
 | `ctrl-\`` | Ghostty drop-down quick terminal (global) |
 
-Workspaces: `1` code · `2` web · `3` notes · `4` chat · `5` media · `9` showpiece.
+Workspaces: `1` code · `2` web · `3` notes · `4` chat · `5` media · `6` system (Finder, System Settings) · `9` showpiece.
 Common apps auto-assign to their workspace on launch (see `aerospace.toml`).
 
 ## Showpiece

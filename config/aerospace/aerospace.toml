@@ -14,7 +14,7 @@ after-startup-command = ['exec-and-forget borders']
 
 # On workspace change: update the SketchyBar highlight, and take the showpiece down
 # when you leave it. See bin/on-workspace-change.
-exec-on-workspace-change = ['/bin/bash', '-c', '{{repo}}/bin/on-workspace-change']
+exec-on-workspace-change = ['/bin/bash', '{{repo}}/bin/on-workspace-change']
 
 # Tiling gaps (the breathing room that makes a rice look clean)
 [gaps]
@@ -48,12 +48,13 @@ alt-minus = 'resize smart -50'
 alt-equal = 'resize smart +50'
 
 # --- Workspaces (virtual desktops) ---
-# 1 code · 2 web · 3 notes · 4 chat · 5 media · 9 showpiece
+# 1 code · 2 web · 3 notes · 4 chat · 5 media · 6 system · 9 showpiece
 alt-1 = 'workspace 1'
 alt-2 = 'workspace 2'
 alt-3 = 'workspace 3'
 alt-4 = 'workspace 4'
 alt-5 = 'workspace 5'
+alt-6 = 'workspace 6'
 alt-9 = 'workspace 9'
 
 # Send focused window to a workspace
@@ -62,10 +63,11 @@ alt-shift-2 = 'move-node-to-workspace 2'
 alt-shift-3 = 'move-node-to-workspace 3'
 alt-shift-4 = 'move-node-to-workspace 4'
 alt-shift-5 = 'move-node-to-workspace 5'
+alt-shift-6 = 'move-node-to-workspace 6'
 alt-shift-9 = 'move-node-to-workspace 9'
 
 # Launch the showpiece (classic unixporn layout) on workspace 9
-alt-shift-s = ['workspace 9', 'exec-and-forget {{repo}}/bin/showpiece up']
+alt-shift-s = ['workspace 9', 'exec-and-forget "{{repo}}/bin/showpiece" up']
 
 # Jump back to previous workspace
 alt-tab = 'workspace-back-and-forth'
@@ -122,11 +124,17 @@ run = 'move-node-to-workspace 4'
 if.app-id = 'com.spotify.client'
 run = 'move-node-to-workspace 5'
 
+# 6 · system: Finder and System Settings, one key away and out of the way.
+# Both float: neither behaves when tiled (Settings has a fixed width).
+[[on-window-detected]]
+if.app-id = 'com.apple.finder'
+run = ['layout floating', 'move-node-to-workspace 6']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.systempreferences'
+run = ['layout floating', 'move-node-to-workspace 6']
+
 # Float apps that misbehave when tiled
 [[on-window-detected]]
 if.app-id = 'us.zoom.xos'
-run = 'layout floating'
-
-[[on-window-detected]]
-if.app-id = 'com.apple.finder'
 run = 'layout floating'

@@ -43,7 +43,7 @@
     { "type": "battery", "key": "Battery", "format": "{capacity}" },
     "break",
     "break",
-                { "type": "custom", "key": "\u001b[48;5;0m   \u001b[48;5;5m   \u001b[48;5;1m   \u001b[48;5;3m   \u001b[48;5;2m   \u001b[48;5;6m   \u001b[48;5;4m   \u001b[48;5;7m   \u001b[0m" },
+    { "type": "custom", "key": "\u001b[48;5;0m   \u001b[48;5;5m   \u001b[48;5;1m   \u001b[48;5;3m   \u001b[48;5;2m   \u001b[48;5;6m   \u001b[48;5;4m   \u001b[48;5;7m   \u001b[0m" },
     { "type": "custom", "key": "\u001b[48;5;8m   \u001b[48;5;13m   \u001b[48;5;9m   \u001b[48;5;11m   \u001b[48;5;10m   \u001b[48;5;14m   \u001b[48;5;12m   \u001b[48;5;15m   \u001b[0m" }
   ]
 }

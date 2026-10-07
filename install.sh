@@ -41,11 +41,22 @@ link matplotlib/matplotlibrc "$HOME/.matplotlib/matplotlibrc"
 if [ ! -d "$HOME/.vim/pack/plugins/start/lexima.vim" ]; then
   echo "==> Installing the vim plugin lexima"
   mkdir -p "$HOME/.vim/pack/plugins/start"
-  git clone --depth 1 https://github.com/cohama/lexima.vim "$HOME/.vim/pack/plugins/start/lexima.vim"
+  # Pinned: Vim runs whatever is in that folder, so not simply the newest commit.
+  git clone --quiet https://github.com/cohama/lexima.vim "$HOME/.vim/pack/plugins/start/lexima.vim"
+  git -C "$HOME/.vim/pack/plugins/start/lexima.vim" checkout --quiet 9f6942c5e1f0f6fe63bdcdac515f34c484b970f5
 fi
+
+# Saving a Python file formats it with ruff, offline (see rice_format.vim): fetch ruff once here.
+uvx ruff --version >/dev/null 2>&1 || echo "    (could not fetch ruff; Python files will be saved unformatted)"
 
 echo "==> Sourcing the rice from ~/.zshrc (prompt, plugins, window titles, plot windows)"
 if ! grep -qF "$BUILD/zsh/rice.zsh" "$HOME/.zshrc" 2>/dev/null; then
+  # The repo has moved: drop the line that points at where it was.
+  if grep -q '# macos-rice$' "$HOME/.zshrc" 2>/dev/null; then
+    kept="$(grep -v '# macos-rice$' "$HOME/.zshrc" || true)"
+    cp "$HOME/.zshrc" "$HOME/.zshrc.bak-$STAMP"
+    printf '%s\n' "$kept" > "$HOME/.zshrc"
+  fi
   echo "source \"$BUILD/zsh/rice.zsh\"   # macos-rice" >> "$HOME/.zshrc"
   echo "    added one line to ~/.zshrc"
 fi
@@ -57,7 +68,7 @@ echo "==> Hiding native menu bar so SketchyBar is visible"
 defaults write NSGlobalDomain _HIHideMenuBar -bool true
 
 echo "==> Starting services"
-brew services start sketchybar 2>/dev/null || sketchybar --reload
+brew services start sketchybar 2>/dev/null || sketchybar --reload || true
 brew services start borders 2>/dev/null || true
 
 echo ""

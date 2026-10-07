@@ -78,7 +78,9 @@ matplotlib.rcParams["axes.facecolor"] = "none"
 class FigureManagerEmber(FigureManagerMac):
     def __init__(self, canvas, num):
         super().__init__(canvas, num)
-        canvas.figure.patch.set_alpha(0)
+        # A see-through face colour, not set_alpha(0): alpha would stay on the figure and savefig
+        # would write a transparent image.
+        canvas.figure.patch.set_facecolor((*BACKGROUND, 0))
         style_windows()
 
     def show(self):
