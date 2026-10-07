@@ -1,0 +1,8 @@
+{
+  "design": "flow",
+  "seed": 15,
+  "knots": 1.0,
+  "twist": 0.2,
+  "length": 0.6,
+  "glow": 0.1
+}

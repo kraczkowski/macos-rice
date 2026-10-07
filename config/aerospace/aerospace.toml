@@ -145,3 +145,10 @@ run = 'move-node-to-workspace 6'
 [[on-window-detected]]
 if.app-id = 'us.zoom.xos'
 run = 'layout floating'
+
+# The wallpaper designer (bin/wallpaper) lays its sliders out for one window size. Other plot
+# windows carry the title "Figure 1" and stay tiled.
+[[on-window-detected]]
+if.app-name-regex-substring = '^python$'
+if.window-title-regex-substring = '^wallpaper$'
+run = 'layout floating'

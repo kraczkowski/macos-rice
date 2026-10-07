@@ -8,6 +8,8 @@ BUILD="$REPO/build"
 
 "$BUILD/macos/accent"
 
+"$REPO/bin/wallpaper" set
+
 # VS Code copies an extension when it installs one, so the theme is installed again each time.
 # A .vsix is a zip of build/vscode.
 code="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"

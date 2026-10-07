@@ -1,0 +1,341 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["matplotlib", "numpy"]
+# ///
+"""The desktop picture, computed from a formula, and a window to design it in.
+
+    bin/wallpaper        the designer: pick a design, move its sliders, "Surprise me", "Set as desktop"
+    bin/wallpaper set    draw the saved design and set it, with no window (bin/apply does this)
+    bin/wallpaper check  draw every design small, and stop at one that comes out dark or broken
+
+The picture is light on a dark screen. A design is a formula that says how much light each dot of
+the screen gets, from 0 (none) to 1 (the most); GRADIENT turns that into the colours of the theme.
+The designs are the part above the line. A new one is a function and a row in DESIGNS: the row
+lists its knobs, the window makes a slider of each, and the function reads one as knob["its_name"].
+The design and numbers of the last "Set as desktop" are kept in wallpaper.json.
+"""
+
+import configparser
+import hashlib
+import json
+import os
+import random
+import subprocess
+import sys
+from pathlib import Path
+
+try:
+    import numpy as np
+    from matplotlib import image
+    from matplotlib.colors import LinearSegmentedColormap
+except ImportError:
+    # Started by a Python that has neither (Space r in Vim, python3 bin/wallpaper): start again
+    # under uv, which installs what the first lines of this file list.
+    if os.environ.get("WALLPAPER_UNDER_UV"):
+        raise
+    os.execvpe("uv", ["uv", "run", "--script", __file__, *sys.argv[1:]], {**os.environ, "WALLPAPER_UNDER_UV": "1"})
+
+# The colours of the picture by their names in theme.ini, from no light to the most.
+GRADIENT = ("base", "wine", "ember", "orange", "gold", "cream")
+POINTS = 16  # a design made of points throws this many for every dot of the picture: fewer is faster and grainier
+
+
+def attractor(knob, wide, high):
+    """Clifford's attractor. A point jumps from (x, y) to (sin(a y) + c cos(a x), sin(b x) + d cos(b y)),
+    again and again. It never settles and never leaves, and where it lands most the picture is brightest.
+
+    A small change of a, b, c or d gives another shape altogether: that is what makes it "chaotic".
+    """
+    a, b, c, d = knob["a"], knob["b"], knob["c"], knob["d"]
+    x, y = scatter(wide * high // 4, -1, 1)
+    count = np.zeros((high, wide))
+    for jump in range(20 + 4 * POINTS):
+        x, y = np.sin(a * y) + c * np.cos(a * x), np.sin(b * x) + d * np.cos(b * y)
+        if jump >= 20:  # the first jumps only bring the points from where they were scattered onto the shape
+            # x stays between -(1 + |c|) and 1 + |c|, y between -(1 + |d|) and 1 + |d|: stretched to fill the screen
+            count += landed(0.5 + 0.48 * x / (1 + abs(c)), 0.5 + 0.48 * y / (1 + abs(d)), wide, high)
+    return glow(count)
+
+
+def flow(knob, wide, high):
+    """Dust in a wind. The wind's direction at each place comes from a few sine waves laid over each
+    other; every grain is carried along it a dot at a time and leaves light where it passes. Where the
+    wind runs together the trails pile up into bright threads.
+    """
+    phase = np.random.default_rng(int(knob["seed"])).uniform(0, 2 * np.pi, 4).tolist()  # another seed, another wind
+    steps = int(knob["length"] * wide)
+    x, y = scatter(wide * high * POINTS // steps, -0.1, 1.1)
+    count = np.zeros((high, wide))
+    for _ in range(steps):
+        u, v = knob["knots"] * x * wide / high, knob["knots"] * y
+        turn = knob["twist"] * (np.sin(u + phase[0] + np.sin(1.7 * v + phase[1])) + np.cos(v + phase[2] - np.sin(1.3 * u + phase[3]))) / 2
+        x, y = x + np.cos(2 * np.pi * turn) / wide, y + np.sin(2 * np.pi * turn) / high
+        count += landed(x, y, wide, high)
+    return glow(count)
+
+
+def silk(knob, wide, high):
+    """A harmonograph: a pen on two pendulums, one swinging it left and right, one up and down, `ratio`
+    times as fast, both slowly coming to rest. Instead of one pen a whole ribbon of them, each a little
+    ahead of its neighbour, so the line becomes a band of cloth that folds over itself.
+
+    mesh shows the band as a net of that many threads, with cross threads; 0 shows it as plain cloth.
+    """
+    rng = np.random.default_rng(0)
+    count = np.zeros((high, wide))
+    for _ in range(4 * POINTS):
+        t, s = rng.random((2, wide * high // 4), dtype=np.float32)  # t: how far along the swing; s: how far across the ribbon
+        if knob["mesh"]:
+            threads, cross = knob["mesh"], knob["mesh"] * knob["turns"] * 1.5
+            half = t.size // 2  # half of the points are moved onto the nearest thread, half onto the nearest cross thread
+            s[:half], t[half:] = np.round(s[:half] * threads) / threads, np.round(t[half:] * cross) / cross
+        swing, rest = 2 * np.pi * knob["turns"] * t, np.exp(-knob["fade"] * t)
+        x = rest * np.sin(swing + knob["spread"] * s)
+        y = rest * np.sin(knob["ratio"] * swing + 2 * knob["spread"] * s)
+        count += landed(0.5 + 0.48 * x, 0.5 + 0.48 * y, wide, high)
+    return glow(count)
+
+
+def waves(knob, wide, high):
+    """Ripples from several stones dropped around the screen, added up. Where crests meet it is bright,
+    where a crest meets a trough they cancel. From far away (bend near 0) the ripples arrive as straight
+    waves, and 5, 7 or more of them make a quasicrystal: a pattern that never repeats.
+    """
+    x, y = plane(wide, high)
+    count, far = int(knob["waves"]), 1 / max(knob["bend"], 0.001)
+    total = np.zeros((high, wide))
+    for angle in np.arange(count) * 2 * np.pi / count:
+        distance = np.hypot(x - far * np.cos(angle), y - far * np.sin(angle))
+        total += np.cos(knob["scale"] * (distance - far))
+    return (total / count + 1) / 2
+
+
+def julia(knob, wide, high):
+    """A Julia set. Every dot is a number z = x + iy, squared and added to c = re + i im, again and
+    again. Some run off to infinity at once, some never do; the light is how long a dot held out, so
+    the border between the two glows. That border is a fractal: it stays as ragged however far you zoom.
+    """
+    x, y = plane(wide, high)
+    z, c = ((x + 1j * y) / knob["zoom"]).astype(np.complex64), complex(knob["re"], knob["im"])
+    held = np.zeros((high, wide), dtype=np.float32)
+    for _ in range(150):
+        here = np.abs(z) < 50
+        z[here] = z[here] ** 2 + c
+        held += here
+    gone = ~here
+    held[gone] -= np.log2(np.log(np.abs(z[gone])) / np.log(50))  # by how far it overshot: smooths the steps away
+    held[here] = 0  # the dots that never left stay dark
+    light = np.log(np.maximum(held, 1))
+    return (light - light.min()) / (np.ptp(light) or 1)
+
+
+# design: (its formula, its knobs). A knob is name: (lowest, highest, where it starts); whole numbers
+# make a slider that moves in whole steps. Every design has glow: how far the light reaches into
+# the dark (the picture is light ** (1 / glow)), so below 1 only the brightest parts stay lit.
+DESIGNS = {
+    "attractor": (attractor, {"a": (-3.0, 3.0, 1.5), "b": (-3.0, 3.0, -1.8), "c": (-2.0, 2.0, 1.6), "d": (-2.0, 2.0, 0.9), "glow": (0.1, 2.0, 0.5)}),
+    "flow": (flow, {
+        "seed": (0, 99, 5),  # which wind
+        "knots": (1.0, 12.0, 5.0),  # how many swirls fit on the screen
+        "twist": (0.2, 4.0, 1.2),  # how hard the wind turns
+        "length": (0.02, 0.6, 0.2),  # how far a grain is carried, in widths of the screen
+        "glow": (0.1, 2.0, 0.75),
+    }),
+    "silk": (silk, {
+        "turns": (1.0, 30.0, 9.0),  # swings before the pen is lifted
+        "ratio": (0.5, 4.0, 1.336),  # near 1.5 or 2 the figure almost closes and slowly turns
+        "fade": (0.0, 4.0, 1.6),  # how fast the pendulums come to rest
+        "spread": (0.0, 3.0, 0.5),  # how wide the ribbon is
+        "mesh": (0, 80, 30),
+        "glow": (0.1, 2.0, 0.8),
+    }),
+    "waves": (waves, {
+        "waves": (2, 16, 7),  # how many stones
+        "scale": (5.0, 150.0, 40.0),  # how many ripples fit on the screen
+        "bend": (0.0, 2.0, 0.02),  # 0: the stones are far away and the waves straight; 1: they lie at the screen's edge
+        "glow": (0.1, 2.0, 0.35),
+    }),
+    "julia": (julia, {"re": (-1.5, 1.5, -0.4), "im": (-1.5, 1.5, 0.6), "zoom": (0.3, 20.0, 1.2), "glow": (0.1, 2.0, 0.5)}),
+}
+
+# ---------------------------------------------------------------------------------------------
+
+WIDTH, HEIGHT = 2940, 1912  # the MacBook Air's screen at its "More Space" setting
+PREVIEW = 6  # the designer draws the picture this many times smaller, to keep up with a slider
+REPO = Path(__file__).resolve().parent.parent
+SAVED = REPO / "wallpaper.json"
+OUT = REPO / "build" / "wallpaper"
+
+
+def scatter(count, low, high):
+    """count points thrown at random between low and high, the same ones every time: their x and their y."""
+    return np.random.default_rng(0).uniform(low, high, (2, count)).astype(np.float32)
+
+
+def landed(x, y, wide, high):
+    """How many of the points fell on each dot of a picture wide by high. x counts from 0 at the left
+    edge to 1 at the right, y from 0 at the top to 1 at the bottom; a point outside is dropped.
+    """
+    column, row = (x * wide).astype(np.intp), (y * high).astype(np.intp)
+    inside = (x >= 0) & (column < wide) & (y >= 0) & (row < high)
+    return np.bincount(row[inside] * wide + column[inside], minlength=wide * high).reshape(high, wide)
+
+
+def glow(count):
+    """Counts of points to light between 0 and 1. A few dots collect thousands of points and most a
+    handful, so the logarithm is taken: 10, 100 and 1000 points come out as even steps of light.
+    """
+    light = np.log1p(count)
+    lit = light[light > 0]
+    return np.minimum(light / np.percentile(lit, 99.5), 1) if lit.size else light
+
+
+def plane(wide, high):
+    """Where every dot of the picture is: x from left to right, y from -1 at the top to 1 at the bottom, the middle of the screen at 0, 0."""
+    return np.meshgrid(np.linspace(-wide / high, wide / high, wide), np.linspace(-1, 1, high))
+
+
+def light(d, wide, high):
+    """The design d as a picture wide by high: the light of every dot, from 0 to 1."""
+    return np.clip(DESIGNS[d["design"]][0](d, wide, high), 0, 1) ** (1 / d["glow"])
+
+
+def dark(picture):
+    """Whether next to nothing of the picture is lit: a formula that came to nothing."""
+    return (picture > 0.1).mean() < 0.02
+
+
+def gradient(colours):
+    return LinearSegmentedColormap.from_list("theme", ["#" + colours[name] for name in GRADIENT])
+
+
+def theme_colours():
+    ini = configparser.ConfigParser(inline_comment_prefixes=("#",), interpolation=None)
+    ini.read(REPO / "theme.ini", encoding="utf-8")
+    return {name: value for section in ini.sections() for name, value in ini[section].items()}
+
+
+def starts(name):
+    """The design called name with every knob where it starts."""
+    return {"design": name} | {knob: start for knob, (low, high, start) in DESIGNS[name][1].items()}
+
+
+def saved_design():
+    """The design of the last "Set as desktop" and its numbers; before the first one, the first design."""
+    saved = json.loads(SAVED.read_text(encoding="utf-8")) if SAVED.exists() else {}
+    d = starts(saved["design"] if saved.get("design") in DESIGNS else next(iter(DESIGNS)))
+    return d | {knob: saved[knob] for knob in d if knob in saved}
+
+
+def set_desktop(d, colours):
+    # The picture is named after everything it is drawn from: the numbers, the colours and this
+    # file. A new picture so has a new name, which macOS needs (it does not look again at a file it
+    # has already shown), and one that is there already is not drawn again: that takes seconds,
+    # and bin/apply comes through here every time.
+    OUT.mkdir(parents=True, exist_ok=True)
+    drawn_from = json.dumps([d, [colours[name] for name in GRADIENT], Path(__file__).read_text(encoding="utf-8")])
+    png = OUT / f"ember-{hashlib.sha1(drawn_from.encode()).hexdigest()[:12]}.png"
+    if not png.exists():
+        # Under another name until it is whole: a run stopped halfway must not leave half a picture.
+        image.imsave(OUT / "drawing.png", light(d, WIDTH, HEIGHT), cmap=gradient(colours), vmin=0, vmax=1)
+        (OUT / "drawing.png").rename(png)
+    for old in OUT.glob("ember-*.png"):
+        if old != png:
+            old.unlink()
+    subprocess.run(["osascript", "-e", f'tell application "System Events" to set picture of every desktop to "{png}"'], check=True)
+    print(f"desktop picture: {png}")
+
+
+def designer(d, colours):
+    """The window: the picture on the left; on the right the designs, a slider for every knob of the one picked, and two buttons."""
+    import matplotlib.pyplot as plt
+    from matplotlib.widgets import Button, RadioButtons, Slider
+
+    surface, lit, text = "#" + colours["surface"], "#" + colours["ember"], "#" + colours["text"]
+    # Places are (left, bottom, width, height), each a share of the window.
+    figure = plt.figure(figsize=(13, 6), layout="none")
+    figure.patch.set_facecolor("#" + colours["base"])  # solid, where a plot window is glass: the colours must be true
+    figure.canvas.manager.set_window_title("wallpaper")  # AeroSpace floats the window with this title
+    wide, high = WIDTH // PREVIEW, HEIGHT // PREVIEW
+    preview = figure.add_axes((0.02, 0.04, 0.64, 0.92), anchor="W")
+    preview.set_axis_off()
+    shown = preview.imshow(np.zeros((high, wide)), cmap=gradient(colours), vmin=0, vmax=1, interpolation="bilinear")
+    kept = {name: starts(name) for name in DESIGNS} | {d["design"]: d}  # each design's numbers, while the window is open
+    radio = RadioButtons(figure.add_axes((0.70, 0.70, 0.12, 0.27), frameon=False), list(DESIGNS), active=list(DESIGNS).index(d["design"]), activecolor=lit, radio_props={"edgecolor": text})
+    sliders = {}
+
+    def redraw(_=None):
+        d = kept[radio.value_selected]
+        knobs = DESIGNS[d["design"]][1]
+        # A slider's number comes as numpy's own kind; int() or float(), whichever the knob started as, makes it plain.
+        d.update({knob: type(knobs[knob][2])(round(slider.val, 4)) for knob, slider in sliders.items()})
+        shown.set_data(light(d, wide, high))
+        figure.canvas.draw_idle()
+
+    def pick(name):
+        """Put up the sliders of the design called name, in place of the ones that are there."""
+        for slider in sliders.values():
+            slider.disconnect_events()
+            slider.ax.remove()
+        sliders.clear()
+        for row, (knob, (low, top, start)) in enumerate(DESIGNS[name][1].items()):
+            whole = isinstance(start, int)
+            sliders[knob] = Slider(
+                figure.add_axes((0.78, 0.62 - 0.07 * row, 0.15, 0.03)), knob, low, top,
+                valinit=kept[name][knob], valstep=1 if whole else None, valfmt="%d" if whole else "%.3f", initcolor="none",
+                color=lit, track_color=surface, handle_style={"facecolor": text, "edgecolor": lit, "size": 9},
+            )
+            sliders[knob].on_changed(redraw)
+        redraw()
+
+    def surprise(_):
+        """Every knob but glow to a number picked at random."""
+        for _ in range(20):  # again when the picture comes out dark: half of all attractors fall into a few dots
+            for knob, slider in sliders.items():
+                if knob != "glow":
+                    slider.eventson = False  # or every one of them would redraw the picture
+                    slider.set_val(random.uniform(slider.valmin, slider.valmax))
+                    slider.eventson = True
+            redraw()
+            if not dark(shown.get_array()):
+                break
+
+    def save_and_set(_):
+        d = kept[radio.value_selected]
+        SAVED.write_text(json.dumps(d, indent=2) + "\n", encoding="utf-8")
+        buttons[1].label.set_text("Drawing…")  # the picture for the screen takes a few seconds
+        figure.canvas.draw()
+        figure.canvas.flush_events()
+        set_desktop(d, colours)
+        buttons[1].label.set_text("Set as desktop")
+        figure.canvas.draw_idle()
+
+    radio.on_clicked(pick)
+    buttons = [
+        Button(figure.add_axes((0.70, 0.06, 0.11, 0.08)), "Surprise me", color=surface, hovercolor="#" + colours["line"]),
+        Button(figure.add_axes((0.83, 0.06, 0.14, 0.08)), "Set as desktop", color=surface, hovercolor="#" + colours["line"]),
+    ]
+    buttons[0].on_clicked(surprise)
+    buttons[1].on_clicked(save_and_set)
+    pick(d["design"])
+    plt.show()
+    return figure, radio, sliders, buttons
+
+
+def check():
+    """Every design, drawn small with its knobs where they start, gives a picture that is whole and not dark."""
+    for name in DESIGNS:
+        picture = light(starts(name), WIDTH // 10, HEIGHT // 10)
+        assert picture.shape == (HEIGHT // 10, WIDTH // 10) and np.isfinite(picture).all(), f"{name}: the picture is broken"
+        assert not dark(picture), f"{name}: the picture is all but dark"
+        print(f"{name}: ok")
+
+
+if __name__ == "__main__":
+    if sys.argv[1:] == ["set"]:
+        set_desktop(saved_design(), theme_colours())
+    elif sys.argv[1:] == ["check"]:
+        check()
+    else:
+        designer(saved_design(), theme_colours())
