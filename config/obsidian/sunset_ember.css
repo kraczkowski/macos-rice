@@ -30,3 +30,19 @@
   --code-background: #{{surface}};
   --font-monospace-theme: "{{font}}";
 }
+
+/* Glass, as in the terminal: needs Settings > Appearance > Translucent window, which lets macOS
+   blur what lies behind. The window gets one tint of the base colour; the panes inside it are
+   clear, so the tint is not laid on twice. Menus and dialogs are outside .app-container and stay solid. */
+body.theme-dark.is-translucent:not(.is-fullscreen) {
+  background-color: color-mix(in srgb, #{{base}} calc({{opacity}} * 100%), transparent) !important;
+  --titlebar-background: transparent;
+  --titlebar-background-focused: transparent;
+}
+
+.theme-dark.is-translucent:not(.is-fullscreen) .app-container {
+  --background-primary: transparent;
+  --background-secondary: transparent;
+  --ribbon-background: transparent;
+  --tab-container-background: transparent;
+}

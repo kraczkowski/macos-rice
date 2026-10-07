@@ -72,10 +72,11 @@ The GUI apps take the theme from the same `theme.ini`, each in the one way it al
 |-----|------------------------|-------------------|
 | Finder, System Settings, native apps | accent and selection colour (`config/macos/accent`) | restart the app |
 | VS Code | a local theme extension (`config/vscode/`) | `cmd+k cmd+t` → Sunset Ember |
-| Obsidian | a CSS snippet, linked into every vault | Settings → Appearance → CSS snippets |
+| Obsidian | a CSS snippet, linked into every vault | Settings → Appearance → CSS snippets, and Translucent window for the glass |
 | Firefox | `userChrome.css`, linked into every profile | restart Firefox |
 | Discord | a Vencord theme, loaded by Vesktop | Settings → Vencord → Themes |
 | Raycast | a theme link (`config/raycast/import`), needs Raycast Pro | run `build/raycast/import`, confirm in Raycast |
+| qBittorrent | colours laid over its built-in theme (`config/qbittorrent/`) | restart qBittorrent |
 | Spotify | a spicetify colour scheme, written into Spotify.app | — (after a Spotify update: `spicetify apply`) |
 
 Vesktop and spicetify are unofficial: Discord's terms do not allow modified clients, and

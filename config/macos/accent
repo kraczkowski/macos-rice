@@ -1,5 +1,7 @@
 #!/bin/bash
 # The two things a native app (Finder, System Settings, Safari) takes from a theme: the accent
-# and the selection colour. An app shows them when next started.
+# and the selection colour.
 defaults write -g AppleAccentColor -int 0   # red: the nearest of the eight macOS offers
 defaults write -g AppleHighlightColor -string "{{mahogany|float}} Other"
+# Tell the apps that are running, so they need no restart.
+osascript -l JavaScript -e 'ObjC.import("Foundation"); for (const name of ["AppleColorPreferencesChangedNotification", "AppleAquaColorVariantChanged"]) $.NSDistributedNotificationCenter.defaultCenter.postNotificationNameObject(name, $())' >/dev/null

@@ -40,6 +40,7 @@ link matplotlib/matplotlibrc "$HOME/.matplotlib/matplotlibrc"
 echo "==> Linking the app themes"
 link discord/sunset_ember.theme.css "$HOME/Library/Application Support/vesktop/themes/sunset_ember.theme.css"
 link spicetify/Themes/SunsetEmber   "$HOME/.config/spicetify/Themes/SunsetEmber"
+link qbittorrent/config.json        "$HOME/.config/qBittorrent/themes/default/config.json"   # its built-in theme, overridden
 
 # Obsidian keeps its snippets per vault, and lists its vaults in obsidian.json.
 python3 -c 'import json, sys; [print(v["path"]) for v in json.load(open(sys.argv[1]))["vaults"].values()]' \
@@ -107,7 +108,7 @@ echo "Done. Final manual step: open AeroSpace.app once and grant Accessibility"
 echo "permission (System Settings > Privacy & Security > Accessibility)."
 echo "Switch each app theme on once:"
 echo "  VS Code   cmd+k cmd+t > Sunset Ember"
-echo "  Obsidian  Settings > Appearance > CSS snippets > sunset_ember"
+echo "  Obsidian  Settings > Appearance > CSS snippets > sunset_ember, and Translucent window"
 echo "  Vesktop   Settings > Vencord > Themes > Sunset Ember"
 echo "  Firefox   restart it"
 echo "  Raycast   build/raycast/import  (needs Raycast Pro)"
