@@ -13,4 +13,4 @@ aerospace reload-config
 pgrep -xq borders && "$REPO/build/borders/bordersrc"
 
 echo "Ghostty reloads with cmd+shift+,  ·  btop, cava, Vim, the shell and native apps read the change when next started."
-echo "Obsidian and Vesktop reload on their own  ·  VS Code: Reload Window  ·  Firefox and qBittorrent: restart  ·  Spotify: spicetify apply"
+echo "Obsidian and Vesktop reload on their own  ·  VS Code: Reload Window  ·  Firefox, Zen and qBittorrent: restart  ·  Spotify: spicetify apply"

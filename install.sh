@@ -57,6 +57,12 @@ for profile in "$HOME/Library/Application Support/Firefox/Profiles"/*/; do
   link firefox/userContent.css "${profile}chrome/userContent.css"
   grep -qF "$PREF" "${profile}user.js" 2>/dev/null || echo "$PREF" >> "${profile}user.js"
 done
+for profile in "$HOME/Library/Application Support/zen/Profiles"/*/; do
+  [ -d "$profile" ] || continue
+  link zen/userChrome.css      "${profile}chrome/userChrome.css"
+  link firefox/userContent.css "${profile}chrome/userContent.css"
+  grep -qF "$PREF" "${profile}user.js" 2>/dev/null || echo "$PREF" >> "${profile}user.js"
+done
 
 echo "==> Setting the macOS accent and installing the VS Code theme"
 "$REPO/bin/apply-apps"
@@ -110,6 +116,6 @@ echo "Switch each app theme on once:"
 echo "  VS Code   cmd+k cmd+t > Sunset Ember"
 echo "  Obsidian  Settings > Appearance > CSS snippets > sunset_ember, and Translucent window"
 echo "  Vesktop   Settings > Vencord > Themes > Sunset Ember"
-echo "  Firefox   restart it"
+echo "  Firefox, Zen   restart them"
 echo "  Raycast   build/raycast/import  (needs Raycast Pro)"
 echo "After a change to theme.ini or config/:  bin/apply"

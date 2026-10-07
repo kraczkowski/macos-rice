@@ -1,0 +1,32 @@
+/* Sunset Ember for Zen. The colours are named in theme.ini.
+   Zen's window is already see-through on macOS; its theme picker sets colour and opacity on the
+   two background layers themselves, so they are set here on those layers, not on :root. */
+
+.zen-browser-generic-background::after {
+  background: color-mix(in srgb, #{{base}} calc({{opacity}} * 100%), transparent) !important;
+  opacity: 1 !important;
+}
+
+/* The layer Zen fades out of when its own theme changes. */
+.zen-browser-generic-background::before {
+  opacity: 0 !important;
+}
+
+:root {
+  --zen-primary-color: #{{ember}} !important;
+  --toolbox-textcolor: #{{text}} !important;
+  --toolbar-color: #{{text}} !important;
+  --zen-urlbar-background: #{{surface}} !important;
+  --zen-dialog-background: #{{surface}} !important;
+  --arrowpanel-background: #{{surface}} !important;
+  --arrowpanel-color: #{{text}} !important;
+  --arrowpanel-border-color: #{{line}} !important;
+  --tab-loading-fill: #{{ember}} !important;
+  --focus-outline-color: #{{ember}} !important;
+  --urlbarView-highlight-background: #{{mahogany}} !important;
+  --urlbarView-highlight-color: #{{cream}} !important;
+}
+
+::selection {
+  background-color: #{{mahogany}} !important;
+}
