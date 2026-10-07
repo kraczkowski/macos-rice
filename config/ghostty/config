@@ -1,38 +1,38 @@
 # Ghostty — Sunset Ember
 # Docs: https://ghostty.org/docs/config
 
-font-family = "JetBrainsMono Nerd Font"
+font-family = "{{font}}"
 font-size = 12
 
-background = 0a1618
-foreground = e8d5c2
-cursor-color = b33219
+background = {{base}}
+foreground = {{text}}
+cursor-color = {{ember}}
 cursor-style = bar
 cursor-style-blink = false
-selection-background = 481510
-selection-foreground = e8d5c2
+selection-background = {{mahogany}}
+selection-foreground = {{text}}
 
 # normal
-palette = 0=#030602
-palette = 1=#b33219
-palette = 2=#6e7a52
-palette = 3=#d9853f
-palette = 4=#3e7a85
-palette = 5=#9c3b4a
-palette = 6=#4f9aa5
-palette = 7=#e8d5c2
+palette = 0=#{{black}}
+palette = 1=#{{ember}}
+palette = 2=#{{moss}}
+palette = 3=#{{amber}}
+palette = 4=#{{ocean}}
+palette = 5=#{{berry}}
+palette = 6=#{{teal}}
+palette = 7=#{{text}}
 # bright
-palette = 8=#38252a
-palette = 9=#d6492b
-palette = 10=#8a9560
-palette = 11=#e8a04f
-palette = 12=#4f93a0
-palette = 13=#b9576a
-palette = 14=#6bb3bd
-palette = 15=#f2e6d8
+palette = 8=#{{plum}}
+palette = 9=#{{flame}}
+palette = 10=#{{olive}}
+palette = 11=#{{gold}}
+palette = 12=#{{steel}}
+palette = 13=#{{rose}}
+palette = 14=#{{sky}}
+palette = 15=#{{cream}}
 
-background-opacity = 0.2
-background-blur-radius = 32
+background-opacity = {{opacity}}
+background-blur-radius = {{blur}}
 window-padding-x = 12
 window-padding-y = 12
 window-decoration = true

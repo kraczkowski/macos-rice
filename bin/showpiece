@@ -5,89 +5,111 @@
 #   ├──────────┤   btop   │
 #   │   cava   │          │
 #   └──────────┴──────────┘
-# Bound to alt-shift-s. Re-pressing it just focuses the showpiece (no relaunch).
-set -euo pipefail
+#   showpiece up          open it (alt-shift-s); if it is up already, just go to it
+#   showpiece down        close it and give the sound back
+#   showpiece leave <ws>  down, unless <ws> is the showpiece's own workspace
+#                         (bin/on-workspace-change calls this on every workspace change)
+# down and leave exit 1 when there was nothing to take down.
+#
+# The showpiece is up exactly while $STATE exists. That file holds what `down` has to undo:
+# line 1 the sound output to go back to, then the ids of the three windows, fastfetch first.
+# Only those three windows are ever closed: anything else you put on the workspace stays.
+set -uo pipefail
 
-DIR="$(cd "$(dirname "$0")" && pwd)"
 WS=9
+STATE="${TMPDIR:-/tmp}/rice_showpiece"
 
-# Window id of the WS9 pane whose title matches a regex. Titles settle to:
-# fastfetch pane -> "zsh", cava pane -> "cava", btop pane -> "btop".
-win_id() {
-  aerospace list-windows --workspace "$WS" --format '%{window-id}|%{window-title}' 2>/dev/null \
-    | awk -F'|' -v re="$1" '$2 ~ re {gsub(/ /,"",$1); print $1; exit}'
+windows() { aerospace list-windows --workspace "$WS" --format '%{window-id}' 2>/dev/null; }
+alive()   { aerospace list-windows --all --format '%{window-id}' 2>/dev/null | grep -qx "$1"; }
+
+# wait_until <command...>: try for up to three seconds.
+wait_until() {
+  for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+    "$@" && return 0
+    sleep 0.2
+  done
+  return 1
 }
 
-# Focus the fastfetch pane (the interactive-shell window, title "zsh").
-focus_fastfetch() {
-  local id; id="$(win_id 'zsh')"
-  [ -n "$id" ] && aerospace focus --window-id "$id"
+# open_pane <command...>: run it in a new Ghostty window and print that window's id.
+# --confirm-close-surface=false: `down` closes these windows while their program still runs,
+# so Ghostty must not ask "close anyway?" — for these windows only.
+open_pane() {
+  local before id=""
+  before="$(windows)"
+  open -na Ghostty.app --args --confirm-close-surface=false -e "$@"
+  new_window() { id="$(windows | grep -vxF -e "$before" | head -1)"; [ -n "$id" ]; }
+  wait_until new_window
+  echo "$id"
+}
+
+# cava draws the sound it reads from Background Music, a pass-through sound device. While that
+# device is in use macOS shows the orange microphone dot, so it runs only while the showpiece is up.
+# Prints the output in use before the switch: line 1 of $STATE.
+sound_through_visualizer() {
+  command -v SwitchAudioSource >/dev/null || return 0
+  local output; output="$(SwitchAudioSource -t output -c)"
+  [ "$output" != "Background Music" ] && echo "$output"
+  open -ga "/Applications/Background Music.app" 2>/dev/null
+  wait_until SwitchAudioSource -t output -s "Background Music" >/dev/null 2>&1
+}
+
+sound_back_to() {
+  osascript -e 'tell application "Background Music" to quit' >/dev/null 2>&1 \
+    || pkill -x "Background Music" 2>/dev/null
+  [ -n "$1" ] && SwitchAudioSource -t output -s "$1" >/dev/null 2>&1
+}
+
+up() {
+  if [ -f "$STATE" ]; then
+    local shown; shown="$(sed -n 2p "$STATE")"
+    if alive "$shown"; then
+      aerospace workspace "$WS" 2>/dev/null
+      aerospace focus --window-id "$shown"
+      return 0
+    fi
+    down   # the windows are gone (a restart, or closed by hand): clear up and start again
+  fi
+
+  aerospace workspace "$WS" 2>/dev/null
+  local output fastfetch cava btop
+  output="$(sound_through_visualizer)"
+  # fastfetch drops to a shell afterwards, so its output stays on screen.
+  fastfetch="$(open_pane zsh -lc "cd ~/dev; fastfetch; exec zsh")"
+  cava="$(open_pane cava)"
+  btop="$(open_pane btop)"
+  printf '%s\n' "$output" "$fastfetch" "$cava" "$btop" > "$STATE"
+
+  # Build the tree from scratch, whatever shape the workspace was left in: one row,
+  # then fastfetch and cava joined into a column on the left, btop the right half.
+  aerospace flatten-workspace-tree
+  aerospace focus --window-id "$fastfetch"
+  aerospace layout h_tiles          # fastfetch | cava | btop
+  aerospace focus --window-id "$cava"
+  aerospace join-with left          # fastfetch + cava -> one container
+  aerospace layout v_tiles          # fastfetch above cava
+  aerospace focus --window-id "$fastfetch"
+}
+
+down() {
+  [ -f "$STATE" ] || return 1
+  local output ids id
+  output="$(sed -n 1p "$STATE")"
+  ids="$(sed 1d "$STATE")"
+  rm -f "$STATE"   # first, so the workspace changes that closing causes find nothing to take down
+
+  for id in $ids; do
+    aerospace close --window-id "$id" 2>/dev/null
+  done
+  all_closed() { for id in $ids; do alive "$id" && return 1; done; return 0; }
+  wait_until all_closed
+  sound_back_to "$output"
   return 0
 }
 
-# Bring up the visualizer audio path: save the current output device, launch
-# Background Music (the passthrough engine cava reads), and make it the default
-# output. on-workspace-change tears this back down when you leave WS9, so the
-# orange mic-capture dot is lit only while the showpiece is up.
-STATE="${TMPDIR:-/tmp}/rice_prev_output"
-if command -v SwitchAudioSource >/dev/null; then
-  cur="$(SwitchAudioSource -t output -c)"
-  [ "$cur" != "Background Music" ] && printf '%s' "$cur" > "$STATE"
-  open -ga "/Applications/Background Music.app" 2>/dev/null || true
-  # wait for the app/device to be ready, then route output through it
-  for _ in 1 2 3 4 5 6 7 8; do
-    SwitchAudioSource -t output -s "Background Music" >/dev/null 2>&1 && break
-    sleep 0.2
-  done
-fi
-
-# Guard: if cava is already running, the showpiece is fully up -> just focus it.
-# Leaving WS9 kills cava (and quits BGM), so "cava running" == "showpiece live".
-if pgrep -x cava >/dev/null 2>&1; then
-  aerospace workspace "$WS"
-  focus_fastfetch
-  exit 0
-fi
-
-# cava isn't running: a fresh launch, or leftover windows from a previous run.
-# Tear any leftovers down cleanly (kills TUIs so there's no close-confirm
-# prompt, waits until WS9 is empty) before laying out a fresh showpiece.
-"$DIR/showpiece-close" || true
-
-aerospace workspace "$WS"
-
-# Open three windows in a row: fastfetch, pipes, btop (left -> right).
-# -n forces a new window; -e runs the command. fastfetch drops to a shell
-# afterwards so its output stays on screen.
-# --confirm-close-surface=false: these windows get torn down programmatically on
-# leave, so suppress Ghostty's "running process?" prompt — for THESE windows
-# only (your normal terminals keep the confirmation).
-open -na Ghostty.app --args --confirm-close-surface=false -e zsh -lc "cd ~/dev; fastfetch; exec zsh"
-sleep 0.7
-open -na Ghostty.app --args --confirm-close-surface=false -e cava
-sleep 0.7
-open -na Ghostty.app --args --confirm-close-surface=false -e btop
-sleep 1.4
-
-# Wait until all three windows actually exist before reshaping — otherwise the
-# join/stack can run on only two and the third lands inside the stack.
-for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do
-  [ "$(aerospace list-windows --workspace "$WS" --format '%{window-id}' 2>/dev/null | grep -c .)" -ge 3 ] && break
-  sleep 0.2
-done
-
-# Build the target tree deterministically — don't rely on the workspace's
-# current orientation (a previous run can leave WS9 vertical, which would stack
-# all three). Flatten to one row, force it horizontal, then merge fastfetch+cava
-# into a vertical left column; btop stays as the right half.
-# NB: these can exit non-zero; don't let `set -e` abort before the focus below.
-aerospace flatten-workspace-tree || true
-ff="$(win_id 'zsh')";  [ -n "$ff" ] && aerospace focus --window-id "$ff" || true
-aerospace layout h_tiles || true                  # fastfetch | cava | btop (row)
-cv="$(win_id 'cava')"; [ -n "$cv" ] && aerospace focus --window-id "$cv" || true
-aerospace join-with left || true                  # fastfetch + cava -> container
-aerospace layout v_tiles || true                  # stack: fastfetch top, cava bottom
-
-# Leave focus on the fastfetch pane (reshape focus order is unreliable).
-sleep 0.3
-focus_fastfetch
+case "${1:-}" in
+  up)    up ;;
+  down)  down ;;
+  leave) [ "${2:-}" != "$WS" ] && down ;;
+  *)     echo "usage: showpiece up | down | leave <workspace>" >&2; exit 2 ;;
+esac

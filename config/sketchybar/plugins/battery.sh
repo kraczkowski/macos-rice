@@ -1,8 +1,8 @@
 #!/bin/bash
-source "$HOME/.config/sketchybar/colors.sh" 2>/dev/null
 
-PERCENT=$(pmset -g batt | grep -Eo "[0-9]+%" | head -1 | cut -d% -f1)
-CHARGING=$(pmset -g batt | grep -q 'AC Power' && echo yes)
+BATTERY=$(pmset -g batt)
+PERCENT=$(grep -Eo "[0-9]+%" <<<"$BATTERY" | head -1 | cut -d% -f1)
+CHARGING=$(grep -q 'AC Power' <<<"$BATTERY" && echo yes)
 
 [ -z "$PERCENT" ] && exit 0
 
@@ -16,13 +16,11 @@ case "$PERCENT" in
 esac
 
 # color stays neutral; only alerts when genuinely low
+COLOR=0xff{{text}}
 if [ -n "$CHARGING" ]; then
   ICON=""
-  COLOR=$TEXT
 elif [ "$PERCENT" -le 20 ]; then
-  COLOR=$RED
-else
-  COLOR=$TEXT
+  COLOR=0xff{{ember}}
 fi
 
-sketchybar --set "$NAME" icon="$ICON" icon.color="$COLOR" label="${PERCENT}%" label.drawing=on label.color=$TEXT
+sketchybar --set "$NAME" icon="$ICON" icon.color="$COLOR" label="${PERCENT}%" label.drawing=on label.color=0xff{{text}}

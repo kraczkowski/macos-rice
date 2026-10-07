@@ -1,5 +1,5 @@
 # Starship prompt — Sunset Ember palette
-# Shared palette mirrors config/sketchybar/colors.sh
+# The colours are named in theme.ini.
 # Docs: https://starship.rs/config/
 
 format = """
@@ -16,13 +16,13 @@ $rust """
 palette = "sunset_ember"
 
 [palettes.sunset_ember]
-base    = "#0a1618"   # dark teal base
-text    = "#e8d5c2"   # warm white
-ember   = "#b33219"   # ember accent  — prompt pill (os + directory)
-oxide   = "#a5311a"   # oxidized iron — git
-sand    = "#c9a892"   # warm sand     — languages
-surface = "#162930"   # dark teal surface
-red     = "#b33219"   # error
+base    = "#{{base}}"   # dark teal base
+text    = "#{{text}}"   # warm white
+ember   = "#{{ember}}"   # ember accent  — prompt pill (os + directory)
+oxide   = "#{{oxide}}"   # oxidized iron — git
+sand    = "#{{sand}}"   # warm sand     — languages
+surface = "#{{surface}}"   # dark teal surface
+red     = "#{{ember}}"   # error
 
 [os]
 disabled = false

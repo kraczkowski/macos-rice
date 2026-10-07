@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+"""Write theme.ini into the templates under config/ and save the result under build/.
+
+A template names a value instead of typing it:
+    {{ember}}       b33219          (a template adds its own prefix: #{{ember}}, 0xff{{ember}})
+    {{ember|rgb}}   179;50;25       (the form fastfetch wants)
+    {{font}}        any other value of theme.ini, as typed there
+    {{repo}}        the folder this repo is in
+
+~/.config links to build/, never to config/. Two things stop the run, each with the file and what
+to change: a name theme.ini does not have, and a colour of the theme typed out instead of named.
+"""
+
+import configparser
+import re
+import shutil
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parent.parent
+TEMPLATES = REPO / "config"
+BUILD = REPO / "build"
+
+NAME = re.compile(r"\{\{(\w+)(\|rgb)?\}\}")
+COLOUR = re.compile(r"[0-9a-f]{6}")
+TYPED = re.compile(r"(?:#|0x[0-9a-f]{2})([0-9a-f]{6})\b", re.IGNORECASE)
+
+
+def theme():
+    """Every value of theme.ini by its name. The sections only group them for the reader."""
+    ini = configparser.ConfigParser(inline_comment_prefixes=("#",))
+    ini.read(REPO / "theme.ini", encoding="utf-8")
+    values = {"repo": str(REPO)}
+    for section in ini.sections():
+        for name, value in ini[section].items():
+            if name in values:
+                sys.exit(f"theme.ini: '{name}' is there twice")
+            values[name] = value
+    return values
+
+
+def rgb(colour):
+    """b33219 -> 179;50;25"""
+    return ";".join(str(int(colour[i : i + 2], 16)) for i in (0, 2, 4))
+
+
+def typed(text, values):
+    """The colours a template types out: any #rrggbb or 0xaarrggbb, and any colour of the theme."""
+    colours = {value for value in values.values() if COLOUR.fullmatch(value)}
+    lower = text.lower()
+    return sorted({found.lower() for found in TYPED.findall(text)} | {c for c in colours if c in lower})
+
+
+def render(text, values, file):
+    def value(match):
+        name, as_rgb = match.groups()
+        if name not in values:
+            sys.exit(f"{file}: names {{{{{name}}}}}, which theme.ini does not have")
+        return rgb(values[name]) if as_rgb else values[name]
+
+    return NAME.sub(value, text)
+
+
+def main():
+    values = theme()
+    templates = [file for file in sorted(TEMPLATES.rglob("*")) if file.is_file() and file.name != ".DS_Store" and "__pycache__" not in file.parts]
+    problems, rendered = [], {}
+    for file in templates:
+        text = file.read_text(encoding="utf-8")
+        problems += [f"{file.relative_to(REPO)}: types {colour}, name it instead" for colour in typed(text, values)]
+        rendered[file] = render(text, values, file.relative_to(REPO))
+    if problems:
+        sys.exit("\n".join(problems))
+    for file, text in rendered.items():
+        out = BUILD / file.relative_to(TEMPLATES)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
+        shutil.copymode(file, out)
+    print(f"rendered {len(templates)} files into {BUILD}")
+
+
+if __name__ == "__main__":
+    main()

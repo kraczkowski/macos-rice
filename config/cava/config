@@ -17,8 +17,8 @@ sensitivity = 85  # <100 tames the big spikes (default 100)
 [color]
 gradient = 1
 gradient_count = 2
-gradient_color_1 = '#5c1416'   # wine
-gradient_color_2 = '#d6492b'   # ember
+gradient_color_1 = '#{{wine}}'   # wine
+gradient_color_2 = '#{{flame}}'   # flame
 
 [smoothing]
 # Scale is 0-100. 0 = raw/twitchy, 100 = very slow & smooth. Default 77.

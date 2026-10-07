@@ -1,5 +1,4 @@
 #!/bin/bash
-source "$HOME/.config/sketchybar/colors.sh" 2>/dev/null
 
 VOLUME="$INFO"
 [ -z "$VOLUME" ] && VOLUME=$(osascript -e 'output volume of (get volume settings)')
@@ -11,4 +10,4 @@ case "$VOLUME" in
   *)                ICON="" ;;
 esac
 
-sketchybar --set "$NAME" icon="$ICON" icon.color=$CYAN label.drawing=off
+sketchybar --set "$NAME" icon="$ICON" icon.color=0xff{{linen}} label.drawing=off

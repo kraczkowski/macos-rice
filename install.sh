@@ -1,115 +1,53 @@
 #!/bin/bash
-# install.sh — symlink configs into ~/.config and install packages.
-# Idempotent: safe to re-run. Backs up anything it would overwrite.
+# install.sh — install the packages, write theme.ini into the configs, link them into place.
+# Safe to re-run. Whatever a link would replace is moved aside first, as <name>.bak-<time>.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG="$HOME/.config"
+BUILD="$REPO/build"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 echo "==> Installing packages from Brewfile"
 brew bundle --file="$REPO/Brewfile" || \
-  echo "    (some casks like sf-symbols need sudo; run brew bundle in your own terminal to finish)"
+  echo "    (background-music needs your password; run brew bundle in your own terminal to finish)"
 
-echo "==> Linking configs into $CONFIG"
-mkdir -p "$CONFIG"
+echo "==> Writing theme.ini into the configs"
+"$REPO/bin/render"
 
+# link <file or folder under build/> <where its tool looks for it>
 link() {
-  local src="$REPO/config/$1"
-  local dest="$CONFIG/$1"
+  local src="$BUILD/$1" dest="$2"
+  mkdir -p "$(dirname "$dest")"
   if [ -e "$dest" ] && [ ! -L "$dest" ]; then
-    echo "    backing up existing $dest -> $dest.bak-$STAMP"
+    echo "    moving aside $dest -> $dest.bak-$STAMP"
     mv "$dest" "$dest.bak-$STAMP"
   fi
   ln -sfn "$src" "$dest"
-  echo "    linked $1"
+  echo "    $dest"
 }
 
-link aerospace
-link sketchybar
-link borders
-link ghostty
-link fastfetch
-link btop
-# starship lives at ~/.config/starship.toml (single file)
-ln -sfn "$REPO/config/starship/starship.toml" "$CONFIG/starship.toml"
-echo "    linked starship.toml"
-# cava ships its own shaders/themes in ~/.config/cava, so link just the file
-mkdir -p "$CONFIG/cava"
-ln -sfn "$REPO/config/cava/config" "$CONFIG/cava/config"
-echo "    linked cava/config"
+echo "==> Linking the configs"
+for tool in aerospace sketchybar borders ghostty fastfetch btop; do
+  link "$tool" "$HOME/.config/$tool"
+done
+link starship/starship.toml  "$HOME/.config/starship.toml"
+link cava/config             "$HOME/.config/cava/config"   # cava keeps its own shaders in that folder
+link vim/vimrc               "$HOME/.vimrc"
+link vim/colors              "$HOME/.vim/colors"
+link vim/plugin              "$HOME/.vim/plugin"
+link matplotlib/matplotlibrc "$HOME/.matplotlib/matplotlibrc"
 
-# vim reads ~/.vimrc and ~/.vim/colors, not ~/.config
-if [ -e "$HOME/.vimrc" ] && [ ! -L "$HOME/.vimrc" ]; then
-  echo "    backing up existing ~/.vimrc -> ~/.vimrc.bak-$STAMP"
-  mv "$HOME/.vimrc" "$HOME/.vimrc.bak-$STAMP"
-fi
-ln -sfn "$REPO/config/vim/vimrc" "$HOME/.vimrc"
-mkdir -p "$HOME/.vim"
-ln -sfn "$REPO/config/vim/colors" "$HOME/.vim/colors"
-echo "    linked vimrc + vim colors"
 # vim loads anything under ~/.vim/pack/*/start on its own; lexima closes brackets and quotes
 if [ ! -d "$HOME/.vim/pack/plugins/start/lexima.vim" ]; then
+  echo "==> Installing the vim plugin lexima"
   mkdir -p "$HOME/.vim/pack/plugins/start"
   git clone --depth 1 https://github.com/cohama/lexima.vim "$HOME/.vim/pack/plugins/start/lexima.vim"
-  echo "    installed vim plugin lexima"
-fi
-# matplotlib reads ~/.matplotlib on macOS
-mkdir -p "$HOME/.matplotlib"
-ln -sfn "$REPO/config/matplotlib/matplotlibrc" "$HOME/.matplotlib/matplotlibrc"
-echo "    linked matplotlibrc"
-
-echo "==> Making scripts executable"
-chmod +x "$REPO"/config/sketchybar/sketchybarrc \
-         "$REPO"/config/sketchybar/plugins/*.sh \
-         "$REPO"/config/borders/bordersrc \
-         "$REPO"/bin/*
-
-echo "==> Enabling starship in your shell (~/.zshrc)"
-if ! grep -q 'starship init zsh' "$HOME/.zshrc" 2>/dev/null; then
-  echo 'eval "$(starship init zsh)"' >> "$HOME/.zshrc"
-  echo "    added starship init to ~/.zshrc"
-else
-  echo "    starship already in ~/.zshrc"
 fi
 
-echo "==> Enabling zsh plugins (autosuggestions, syntax highlighting, fzf)"
-if ! grep -q 'macos-rice shell plugins' "$HOME/.zshrc" 2>/dev/null; then
-  cat >> "$HOME/.zshrc" <<'EOF'
-
-# >>> macos-rice shell plugins >>>
-# Managed by ~/dev/macos-rice/install.sh. fast-syntax-highlighting must load last.
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#7a6a5e'
-source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh 2>/dev/null
-command -v fzf >/dev/null && source <(fzf --zsh)
-source /opt/homebrew/share/zsh-fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh 2>/dev/null
-
-# clean window titles: running program name, or "zsh" at the prompt (no folder/ghost)
-autoload -Uz add-zsh-hook
-_rice_title_precmd() { print -Pn '\e]0;zsh\a' }
-_rice_title_preexec() { print -Pn '\e]0;'"${1%% *}"'\a' }
-add-zsh-hook precmd _rice_title_precmd
-add-zsh-hook preexec _rice_title_preexec
-# <<< macos-rice shell plugins <<<
-EOF
-  echo "    added plugin block to ~/.zshrc"
-else
-  echo "    plugin block already in ~/.zshrc"
-fi
-
-echo "==> Enabling the see-through matplotlib windows (~/.zshrc)"
-if ! grep -q 'macos-rice matplotlib' "$HOME/.zshrc" 2>/dev/null; then
-  cat >> "$HOME/.zshrc" <<'EOF'
-
-# >>> macos-rice matplotlib >>>
-# Managed by ~/dev/macos-rice/install.sh. Plot windows use the Ghostty-style backend in the rice repo.
-export PYTHONPATH="$HOME/dev/macos-rice/config/matplotlib${PYTHONPATH:+:$PYTHONPATH}"
-export MPLBACKEND="module://ember_backend"
-# <<< macos-rice matplotlib <<<
-EOF
-  echo "    added matplotlib block to ~/.zshrc"
-else
-  echo "    matplotlib block already in ~/.zshrc"
+echo "==> Sourcing the rice from ~/.zshrc (prompt, plugins, window titles, plot windows)"
+if ! grep -qF "$BUILD/zsh/rice.zsh" "$HOME/.zshrc" 2>/dev/null; then
+  echo "source \"$BUILD/zsh/rice.zsh\"   # macos-rice" >> "$HOME/.zshrc"
+  echo "    added one line to ~/.zshrc"
 fi
 
 echo "==> Silencing the 'Last login' banner (~/.hushlogin)"
@@ -125,3 +63,4 @@ brew services start borders 2>/dev/null || true
 echo ""
 echo "Done. Final manual step: open AeroSpace.app once and grant Accessibility"
 echo "permission (System Settings > Privacy & Security > Accessibility)."
+echo "After a change to theme.ini or config/:  bin/apply"

@@ -7,14 +7,26 @@ Saved images are not affected: they keep the solid background from matplotlibrc.
 
 import ctypes
 import ctypes.util
+from pathlib import Path
 
 import matplotlib
 from matplotlib.backends.backend_macosx import FigureCanvasMac, FigureManagerMac
 
-# Keep these three in step with config/ghostty/config.
-BACKGROUND = (0x0A / 255, 0x16 / 255, 0x18 / 255)
-OPACITY = 0.2
-BLUR_RADIUS = 32
+# The plot window takes its look from the Ghostty config that bin/render wrote: nothing is typed here.
+GHOSTTY = Path(__file__).resolve().parents[2] / "build" / "ghostty" / "config"
+
+
+def ghostty():
+    """Ghostty's settings as Ghostty reads them: one `key = value` per line."""
+    lines = GHOSTTY.read_text(encoding="utf-8").splitlines()
+    pairs = (line.split("=", 1) for line in lines if "=" in line and not line.startswith("#"))
+    return {key.strip(): value.strip() for key, value in pairs}
+
+
+LOOK = ghostty()
+BACKGROUND = tuple(int(LOOK["background"][i : i + 2], 16) / 255 for i in (0, 2, 4))
+OPACITY = float(LOOK["background-opacity"])
+BLUR_RADIUS = int(LOOK["background-blur-radius"])
 
 TITLE_HIDDEN = 1
 

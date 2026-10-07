@@ -12,10 +12,9 @@ enable-normalization-opposite-orientation-for-nested-containers = true
 # Reload borders when AeroSpace starts (so the glow is always on)
 after-startup-command = ['exec-and-forget borders']
 
-# On workspace change: update the SketchyBar highlight + tear down the showpiece
-# audio (quit Background Music, restore output) when leaving WS9. See
-# bin/on-workspace-change.
-exec-on-workspace-change = ['/bin/bash', '-c', '$HOME/dev/macos-rice/bin/on-workspace-change']
+# On workspace change: update the SketchyBar highlight, and take the showpiece down
+# when you leave it. See bin/on-workspace-change.
+exec-on-workspace-change = ['/bin/bash', '-c', '{{repo}}/bin/on-workspace-change']
 
 # Tiling gaps (the breathing room that makes a rice look clean)
 [gaps]
@@ -66,7 +65,7 @@ alt-shift-5 = 'move-node-to-workspace 5'
 alt-shift-9 = 'move-node-to-workspace 9'
 
 # Launch the showpiece (classic unixporn layout) on workspace 9
-alt-shift-s = ['workspace 9', 'exec-and-forget $HOME/dev/macos-rice/bin/showpiece']
+alt-shift-s = ['workspace 9', 'exec-and-forget {{repo}}/bin/showpiece up']
 
 # Jump back to previous workspace
 alt-tab = 'workspace-back-and-forth'

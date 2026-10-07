@@ -5,11 +5,7 @@
 
 PLUGIN_DIR="$CONFIG_DIR/plugins"
 
-# --- Sunset Ember palette (single source of truth: colors.sh) ---
-source "$CONFIG_DIR/colors.sh"
-export BAR=0xf00a1618      # slightly translucent bar (only color not in colors.sh)
-
-FONT="JetBrainsMono Nerd Font"
+FONT="{{font}}"
 
 # --- Bar appearance ---
 sketchybar --bar \
@@ -19,7 +15,7 @@ sketchybar --bar \
   sticky=on \
   padding_left=8 \
   padding_right=8 \
-  color=$BAR \
+  color=0xf0{{base}} \
   corner_radius=8 \
   y_offset=5 \
   margin=8
@@ -27,9 +23,9 @@ sketchybar --bar \
 # --- Default item styling (flat, no background boxes) ---
 sketchybar --default \
   icon.font="$FONT:Bold:13.0" \
-  icon.color=$TEXT \
+  icon.color=0xff{{text}} \
   label.font="$FONT:Medium:12.0" \
-  label.color=$TEXT \
+  label.color=0xff{{text}} \
   background.drawing=off \
   padding_left=4 \
   padding_right=4 \
@@ -47,7 +43,7 @@ for sid in 1 2 3 4 5; do
     --set space.$sid \
       icon="●" \
       icon.font="$FONT:Bold:10.0" \
-      icon.color=$SURFACE \
+      icon.color=0xff{{surface}} \
       label.drawing=off \
       padding_left=3 \
       padding_right=3 \
@@ -60,7 +56,7 @@ sketchybar --add item front_app left \
   --set front_app \
     icon.drawing=off \
     background.drawing=off \
-    label.color=$BLUE \
+    label.color=0xff{{ember}} \
     script="$PLUGIN_DIR/front_app.sh" \
   --subscribe front_app front_app_switched
 
@@ -68,14 +64,14 @@ sketchybar --add item front_app left \
 sketchybar --add item clock right \
   --set clock \
     icon.drawing=off \
-    label.color=$TEXT \
+    label.color=0xff{{text}} \
     update_freq=10 \
     script="$PLUGIN_DIR/clock.sh"
 
 # --- RIGHT: wifi ---
 sketchybar --add item wifi right \
   --set wifi \
-    icon.color=$CYAN \
+    icon.color=0xff{{linen}} \
     update_freq=30 \
     script="$PLUGIN_DIR/wifi.sh"
 

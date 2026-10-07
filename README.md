@@ -1,8 +1,8 @@
 # macOS Rice — Sunset Ember
 
 A tiling-WM macOS setup ("rice"), themed in **Sunset Ember** — dark teal base,
-oxidized-iron and ember reds. Configs live in `config/` and are **symlinked**
-into `~/.config`, so the whole setup is version-controlled and portable.
+oxidized-iron and ember reds. One file, `theme.ini`, holds every colour; the
+configs in `config/` name them, and what `~/.config` links to is rendered from both.
 
 No SIP disable required.
 
@@ -16,19 +16,31 @@ No SIP disable required.
 | [Ghostty](https://ghostty.org) | Terminal |
 | [Starship](https://starship.rs) | Shell prompt |
 | btop · fastfetch · cava | Resource monitor · system info · audio visualizer |
+| Vim · matplotlib | Editor and plot windows in the same look |
 | [Raycast](https://raycast.com) | Launcher |
 
 ## Theme — Sunset Ember
 
-One shared palette keeps every tool consistent:
+`theme.ini` is the one place a colour, the font or the glass effect is typed:
 
-```
-bg       #0a1618   surface  #162930   text     #e8d5c2
-ember    #b33219   oxidized #a5311a   wine     #5c1416   mahogany #481510
+```ini
+base  = 0a1618  # dark teal: every background
+ember = b33219  # the accent: focus, cursor, prompt, alerts
 ```
 
-`config/sketchybar/colors.sh` is the single source of truth for the bar; the
-same values mirror into Ghostty, Starship, btop, cava, and fastfetch.
+A file under `config/` names a value instead of typing it: `#{{ember}}` in
+Ghostty, `0xff{{ember}}` in the bar, `{{ember|rgb}}` in fastfetch. `bin/render`
+writes the theme into those templates and saves the result in `build/`, which is
+what `~/.config` links to. It stops, naming the file, if a template names
+something the theme lacks or types a colour out.
+
+After a change to `theme.ini` or anything under `config/`:
+
+```sh
+bin/apply    # render, then reload the bar, the window manager and the borders
+```
+
+A new theme is a new `theme.ini`.
 
 ## Install
 
@@ -41,8 +53,8 @@ cd ~/dev/macos-rice
 ./install.sh
 ```
 
-`install.sh` installs the `Brewfile`, symlinks the configs, adds a managed block
-to `~/.zshrc` (Starship + zsh plugins), and starts the bar.
+`install.sh` installs the `Brewfile`, renders and links the configs, adds one
+`source` line to `~/.zshrc`, hides the native menu bar and starts the bar.
 
 Manual steps it can't do for you:
 
@@ -87,8 +99,8 @@ workspace 9:
 ```
 
 cava reads audio via the **Background Music** loopback. Launching the showpiece
-starts Background Music and routes output through it; leaving workspace 9 kills
-cava, quits Background Music, and restores your output device. So the orange mic
+starts Background Music and routes output through it; leaving workspace 9 closes
+those three windows (and only those), quits Background Music, and restores your output device. So the orange mic
 indicator only shows while the showpiece is actually on screen.
 
 > **Heads-up: the cava setup is a giant pile of macOS workarounds.** macOS has no
@@ -104,11 +116,16 @@ indicator only shows while the showpiece is actually on screen.
 ## Layout
 
 ```
+theme.ini         every colour, the font, the glass effect
+config/<tool>/    each tool's config, naming the theme's values
+build/<tool>/     the rendered configs ~/.config links to (not in git)
+bin/render        theme.ini + config/ -> build/
+bin/apply         render, then reload what is running
+bin/showpiece     the three-window showcase: up | down | leave <workspace>
+bin/on-workspace-change   run by AeroSpace: the bar's dot, and taking the showpiece down
 Brewfile          install manifest (brew bundle)
-install.sh        symlink + setup (idempotent)
-bin/showpiece     the three-window showcase
-config/<tool>/    each tool's config, symlinked to ~/.config/<tool>/
+install.sh        packages, render, links (safe to re-run)
 ```
 
-`~/.zshrc` is not tracked (it holds personal aliases); `install.sh` appends a
-marker-delimited block to it instead.
+`~/.zshrc` is not tracked (it holds personal aliases); it sources
+`build/zsh/rice.zsh`, where everything the rice adds to the shell lives.

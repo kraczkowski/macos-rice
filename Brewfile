@@ -27,7 +27,9 @@ brew "fzf"                         # fuzzy finder (Ctrl+R history, Ctrl+T files)
 
 # --- Fonts (needed for icons in bar/terminal) ---
 cask "font-jetbrains-mono-nerd-font"
-cask "sf-symbols"                  # Apple symbols used by sketchybar
+
+# --- Python from Vim (Space r runs a file, Space t the tests, saving formats) ---
+brew "uv"
 
 # --- Launcher (already installed as app, listed for portability) ---
 cask "raycast"

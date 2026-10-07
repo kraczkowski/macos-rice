@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# apply — after a change to theme.ini or to anything under config/:
+# write the theme into the configs (bin/render), then reload what is running.
+set -euo pipefail
+
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+
+"$REPO/bin/render"
+sketchybar --reload
+aerospace reload-config
+# Run again while borders is up, it hands its settings to the running one and returns.
+pgrep -xq borders && "$REPO/build/borders/bordersrc"
+
+echo "Ghostty reloads with cmd+shift+,  ·  btop, cava, Vim and the shell read the change when next started."
