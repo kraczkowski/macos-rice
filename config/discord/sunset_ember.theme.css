@@ -6,46 +6,47 @@
 
 /* Loaded by Vesktop (Discord with Vencord built in). Switch on once: Settings > Vencord > Themes.
    Discord renames these variables now and then: the first block is its current look, the second
-   the one before it. */
+   the one before it.
+   Discord sets its own on more specific selectors, hence !important throughout. */
 
 .theme-dark,
 .visual-refresh.theme-dark {
-  --background-base-lowest: #{{base}};
-  --background-base-lower: #{{base}};
-  --background-base-low: #{{base}};
-  --background-surface-high: #{{surface}};
-  --background-surface-higher: #{{surface}};
-  --background-surface-highest: #{{line}};
-  --background-mod-subtle: #{{surface}};
-  --background-mod-normal: #{{line}};
-  --border-subtle: #{{line}};
-  --border-normal: #{{line}};
-  --text-default: #{{text}};
-  --text-strong: #{{cream}};
-  --text-muted: #{{muted}};
-  --text-link: #{{sky}};
-  --channels-default: #{{sand}};
-  --interactive-normal: #{{sand}};
-  --interactive-hover: #{{text}};
-  --interactive-active: #{{cream}};
-  --header-primary: #{{cream}};
-  --header-secondary: #{{sand}};
-  --mention-foreground: #{{gold}};
-  --mention-background: #{{mahogany}};
-  --brand-500: #{{ember}};
-  --brand-560: #{{oxide}};
-  --brand-360: #{{flame}};
+  --background-base-lowest: #{{base}} !important;
+  --background-base-lower: #{{base}} !important;
+  --background-base-low: #{{base}} !important;
+  --background-surface-high: #{{surface}} !important;
+  --background-surface-higher: #{{surface}} !important;
+  --background-surface-highest: #{{line}} !important;
+  --background-mod-subtle: #{{surface}} !important;
+  --background-mod-normal: #{{line}} !important;
+  --border-subtle: #{{line}} !important;
+  --border-normal: #{{line}} !important;
+  --text-default: #{{text}} !important;
+  --text-strong: #{{cream}} !important;
+  --text-muted: #{{muted}} !important;
+  --text-link: #{{sky}} !important;
+  --channels-default: #{{sand}} !important;
+  --interactive-normal: #{{sand}} !important;
+  --interactive-hover: #{{text}} !important;
+  --interactive-active: #{{cream}} !important;
+  --header-primary: #{{cream}} !important;
+  --header-secondary: #{{sand}} !important;
+  --mention-foreground: #{{gold}} !important;
+  --mention-background: #{{mahogany}} !important;
+  --brand-500: #{{ember}} !important;
+  --brand-560: #{{oxide}} !important;
+  --brand-360: #{{flame}} !important;
 
-  --background-primary: #{{base}};
-  --background-secondary: #{{base}};
-  --background-secondary-alt: #{{surface}};
-  --background-tertiary: #{{base}};
-  --background-floating: #{{surface}};
-  --background-modifier-hover: #{{surface}};
-  --background-modifier-selected: #{{line}};
-  --channeltextarea-background: #{{surface}};
-  --text-normal: #{{text}};
-  --font-code: "{{font}}", monospace;
+  --background-primary: #{{base}} !important;
+  --background-secondary: #{{base}} !important;
+  --background-secondary-alt: #{{surface}} !important;
+  --background-tertiary: #{{base}} !important;
+  --background-floating: #{{surface}} !important;
+  --background-modifier-hover: #{{surface}} !important;
+  --background-modifier-selected: #{{line}} !important;
+  --channeltextarea-background: #{{surface}} !important;
+  --text-normal: #{{text}} !important;
+  --font-code: "{{font}}", monospace !important;
 }
 
 /* Glass, as in the terminal: needs "macosVibrancyStyle": "under-window" in Vesktop's
@@ -62,12 +63,12 @@ body {
 
 .theme-dark,
 .visual-refresh.theme-dark {
-  --background-base-lowest: transparent;
-  --background-base-lower: transparent;
-  --background-base-low: transparent;
-  --background-primary: transparent;
-  --background-secondary: transparent;
-  --background-tertiary: transparent;
+  --background-base-lowest: transparent !important;
+  --background-base-lower: transparent !important;
+  --background-base-low: transparent !important;
+  --background-primary: transparent !important;
+  --background-secondary: transparent !important;
+  --background-tertiary: transparent !important;
 }
 
 ::selection {
