@@ -106,6 +106,7 @@ AeroSpace uses `alt` as the modifier.
 | `alt-f` | Fullscreen |
 | `alt-shift-space` | Toggle float / tile |
 | `alt-shift-s` | Launch the showpiece (workspace 9) |
+| `alt-b` | Open the custom browser |
 | `alt-shift-;` | Service mode (reload config, reset layout, …) |
 | `ctrl-\`` | Ghostty drop-down quick terminal (global) |
 

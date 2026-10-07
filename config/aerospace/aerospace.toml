@@ -69,6 +69,9 @@ alt-shift-9 = 'move-node-to-workspace 9'
 # Launch the showpiece (classic unixporn layout) on workspace 9
 alt-shift-s = ['workspace 9', 'exec-and-forget "{{repo}}/bin/showpiece" up']
 
+# Open the custom browser. Full path to uv: AeroSpace does not read ~/.zshrc.
+alt-b = 'exec-and-forget /opt/homebrew/bin/uv run "$HOME/dev/projects/browser/browser.py"'
+
 # Jump back to previous workspace
 alt-tab = 'workspace-back-and-forth'
 
