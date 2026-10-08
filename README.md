@@ -15,9 +15,9 @@ No SIP disable required.
 | [JankyBorders](https://github.com/FelixKratz/JankyBorders) | Active-window glow |
 | [Ghostty](https://ghostty.org) | Terminal |
 | [Starship](https://starship.rs) | Shell prompt |
-| btop · fastfetch · cava | Resource monitor · system info · audio visualizer |
+| btop · fastfetch | Resource monitor · system info |
 | Vim · matplotlib | Editor and plot windows in the same look |
-| VS Code · Obsidian · Firefox · Vesktop (Discord) · Spotify | The same colours, each through its own theme file |
+| Obsidian · Firefox · Zen · Vesktop (Discord) · Spotify | The same colours, each through its own theme file |
 | [Raycast](https://raycast.com) | Launcher |
 
 ## Theme — Sunset Ember
@@ -57,12 +57,8 @@ cd ~/dev/macos-rice
 `install.sh` installs the `Brewfile`, renders and links the configs, adds one
 `source` line to `~/.zshrc`, hides the native menu bar and starts the bar.
 
-Manual steps it can't do for you:
-
-- Open **AeroSpace.app** once and grant Accessibility permission
-  (System Settings → Privacy & Security → Accessibility).
-- The `background-music` cask needs your password — run
-  `brew install --cask background-music` in your own terminal if the bundle skips it.
+The one step it can't do for you: open **AeroSpace.app** once and grant Accessibility
+permission (System Settings → Privacy & Security → Accessibility).
 
 ## Apps
 
@@ -71,7 +67,6 @@ The GUI apps take the theme from the same `theme.ini`, each in the one way it al
 | App | What carries the theme | Switch it on once |
 |-----|------------------------|-------------------|
 | Finder, System Settings, native apps | accent and selection colour (`config/macos/accent`) | restart the app |
-| VS Code | a local theme extension (`config/vscode/`) | `cmd+k cmd+t` → Sunset Ember |
 | Obsidian | a CSS snippet, linked into every vault | Settings → Appearance → CSS snippets, and Translucent window for the glass |
 | Firefox | `userChrome.css`, linked into every profile | restart Firefox |
 | Zen | `userChrome.css` over its own see-through window, linked into every profile | restart Zen |
@@ -105,7 +100,7 @@ AeroSpace uses `alt` as the modifier.
 | `alt-tab` | Previous workspace |
 | `alt-f` | Fullscreen |
 | `alt-shift-space` | Toggle float / tile |
-| `alt-shift-s` | Launch the showpiece (workspace 9) |
+| `alt-shift-s` | The showpiece (workspace 9): open it, go to it, or from there close it |
 | `alt-b` | Open the custom browser |
 | `alt-shift-;` | Service mode (reload config, reset layout, …) |
 | `ctrl-\`` | Ghostty drop-down quick terminal (global) |
@@ -122,24 +117,15 @@ workspace 9:
 ┌──────────┬──────────┐
 │ fastfetch│          │
 ├──────────┤   btop   │
-│   cava   │          │
+│   fire   │          │
 └──────────┴──────────┘
 ```
 
-cava reads audio via the **Background Music** loopback. Launching the showpiece
-starts Background Music and routes output through it; leaving workspace 9 closes
-those three windows (and only those), quits Background Music, and restores your output device. So the orange mic
-indicator only shows while the showpiece is actually on screen.
+The same key goes to the showpiece when it is open and you are elsewhere, and pressed on
+workspace 9 closes those three windows (and only those) and goes back to where you were.
 
-> **Heads-up: the cava setup is a giant pile of macOS workarounds.** macOS has no
-> native audio loopback, so you need a virtual device (Background Music). The
-> privacy "mic in use" dot can't be hidden without disabling SIP; a Multi-Output
-> Device would kill the volume keys; Background Music *and* cava each hold the
-> mic open on their own; and the showpiece windows need to be torn down
-> programmatically (killing the TUIs, suppressing Ghostty's close prompt,
-> re-asserting focus) just to leave the workspace cleanly. On Linux this is one
-> line pointing cava at a PipeWire `.monitor` source. Honestly? On macOS you may
-> just want to skip cava and enjoy the rest of the rice. 🙃
+The fire is `config/showpiece/fire`, a page of Python in the colours of the theme. It burns as
+high as the machine is busy: low on an idle one, to the top when every core is at work.
 
 ## Layout
 
@@ -149,9 +135,9 @@ config/<tool>/    each tool's config, naming the theme's values
 build/<tool>/     the rendered configs ~/.config links to (not in git)
 bin/render        theme.ini + config/ -> build/
 bin/apply         render, then reload what is running
-bin/apply-apps    the macOS accent and the VS Code theme, which keep a copy of their own
-bin/showpiece     the three-window showcase: up | down | leave <workspace>
-bin/on-workspace-change   run by AeroSpace: the bar's dot, and taking the showpiece down
+bin/apply-apps    the macOS accent and the desktop picture, which keep a copy of their own
+bin/showpiece     the three-window showcase, opened and closed by alt-shift-s
+bin/wallpaper     the desktop picture, drawn from a formula, and a window to design it in
 Brewfile          install manifest (brew bundle)
 install.sh        packages, render, links (safe to re-run)
 ```

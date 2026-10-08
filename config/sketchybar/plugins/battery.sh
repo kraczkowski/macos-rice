@@ -23,4 +23,4 @@ elif [ "$PERCENT" -le 20 ]; then
   COLOR=0xff{{ember}}
 fi
 
-sketchybar --set "$NAME" icon="$ICON" icon.color="$COLOR" label="${PERCENT}%" label.drawing=on label.color=0xff{{text}}
+sketchybar --set "$NAME" icon="$ICON" icon.color="$COLOR" label="${PERCENT}%"

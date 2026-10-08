@@ -72,12 +72,15 @@ sketchybar --add item clock right \
 sketchybar --add item wifi right \
   --set wifi \
     icon.color=0xff{{linen}} \
+    label.drawing=off \
     update_freq=30 \
     script="$PLUGIN_DIR/wifi.sh"
 
 # --- RIGHT: volume ---
 sketchybar --add item volume right \
   --set volume \
+    icon.color=0xff{{linen}} \
+    label.drawing=off \
     script="$PLUGIN_DIR/volume.sh" \
   --subscribe volume volume_change
 

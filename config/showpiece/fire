@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""A fire in the terminal, for the showpiece. It burns as high as the machine is busy.
+
+    fire        burn until ctrl-c
+    fire check  burn a small one for a while with no screen, and stop if it is not a fire
+
+The screen is a grid of heat, from 0 (none) to 1 (the most). The bottom row is kept hot, in
+places more and in places less, and those places wander. Every
+frame each dot takes the heat of a dot just below it, a little to the left or right and a little
+cooler, so the heat climbs, sways and dies out: that is all a flame is here. How fast it cools is
+set by the load of the machine, so an idle one glows low and a busy one burns to the top.
+
+A character cell is two dots, one above the other, drawn with the half block ▀. A dot with no
+heat is not drawn at all, so the glass of the window shows through.
+"""
+
+import math
+import os
+import random
+import shutil
+import sys
+import time
+
+# The colours of the flame as theme.ini names them, from the coolest to the hottest.
+GRADIENT = ("{{wine|rgb}}", "{{ember|rgb}}", "{{orange|rgb}}", "{{gold|rgb}}", "{{cream|rgb}}")
+SHADES = 48  # how many steps of colour lie between no heat and the most
+FPS = 20
+
+
+def shades():
+    """SHADES colours along GRADIENT, each as the "r;g;b" a terminal wants. Number 0 is never drawn."""
+    stops = [[int(part) for part in colour.split(";")] for colour in GRADIENT]
+    made = []
+    for shade in range(SHADES):
+        place = shade / (SHADES - 1) * (len(stops) - 1)
+        low = min(int(place), len(stops) - 2)
+        made.append(";".join(str(round(a + (b - a) * (place - low))) for a, b in zip(stops[low], stops[low + 1])))
+    return made
+
+
+SHADE = shades()
+
+
+def reach():
+    """How far up the screen the flames get, from 0.25 to 1: the load of the last minute, 1 when every core is busy."""
+    return 0.25 + 0.75 * min(os.getloadavg()[0] / os.cpu_count(), 1)
+
+
+def burn(heat, reach, now):
+    """One frame later, at the time now in seconds. heat is a list of rows, the top one first, changed in place."""
+    high, wide = len(heat), len(heat[0])
+    cool = 1.6 / (high * reach)  # a dot cools by half of this a row on average: the hottest flames then show for about high * reach rows
+    rnd = random.random
+    for y in range(high - 1):
+        row, below = heat[y], heat[y + 1]
+        for x in range(wide):
+            r = rnd() * 3  # its whole part: from which side the heat comes; the rest: how much it cools
+            side = int(r)
+            hot = below[(x + side - 1) % wide] - (r - side) * cool
+            row[x] = hot if hot > 0 else 0.0
+    # The embers: two waves of different length running against each other, so the hot places
+    # come and go and no two flames stand still side by side.
+    heat[-1] = [0.62 + 0.38 * math.sin(0.19 * x + 1.1 * now) * math.sin(0.043 * x - 0.6 * now) for x in range(wide)]
+
+
+def cell(top, bottom):
+    """A cell from the shades of its two dots: (the colours to switch to, the character)."""
+    if not top and not bottom:
+        return "\x1b[0m", " "
+    if not bottom:
+        return f"\x1b[0;38;2;{SHADE[top]}m", "▀"
+    if not top:
+        return f"\x1b[0;38;2;{SHADE[bottom]}m", "▄"
+    return f"\x1b[38;2;{SHADE[top]};48;2;{SHADE[bottom]}m", "▀"
+
+
+CELLS = {}  # every cell drawn so far, by its two shades
+
+
+def picture(heat):
+    """heat as the text that draws it, from the top left corner of the screen."""
+    top_shade = SHADES - 1
+    out = []
+    for line in range(len(heat) // 2):
+        out.append(f"\x1b[{line + 1};1H")
+        colours = None
+        for pair in zip(heat[2 * line], heat[2 * line + 1]):
+            # Heat squared: only the heart of a flame is white, and its edge thins out into the dark.
+            key = int(pair[0] * pair[0] * top_shade), int(pair[1] * pair[1] * top_shade)
+            if key not in CELLS:
+                CELLS[key] = cell(*key)
+            new, character = CELLS[key]
+            if new != colours:  # colours are said only where they change: most of the text is then the characters
+                out.append(new)
+                colours = new
+            out.append(character)
+        out.append("\x1b[0m")
+    return "".join(out)
+
+
+def cold(wide, lines):
+    """A screen of that many cells with no heat on it."""
+    return [[0.0] * wide for _ in range(2 * lines)]
+
+
+def run():
+    size, heat, flames, frame = None, None, reach(), 0
+    sys.stdout.write("\x1b[?1049h\x1b[?25l")  # the terminal's second screen, and no cursor
+    try:
+        while True:
+            started = time.monotonic()
+            if shutil.get_terminal_size() != size:  # the window was resized: start again
+                size = shutil.get_terminal_size()
+                heat = cold(size.columns, size.lines)
+                sys.stdout.write("\x1b[2J")
+            if frame % FPS == 0:
+                flames = reach()
+            frame += 1
+            burn(heat, flames, started)
+            sys.stdout.write(picture(heat))
+            sys.stdout.flush()
+            time.sleep(max(0, 1 / FPS - (time.monotonic() - started)))
+    except KeyboardInterrupt:
+        pass
+    finally:
+        sys.stdout.write("\x1b[?25h\x1b[?1049l")
+
+
+def check():
+    """A small fire is hot at the bottom, out at the top, reaches higher on a busy machine, and can be drawn."""
+    random.seed(0)
+
+    def burnt(reach):
+        heat = cold(40, 15)
+        for frame in range(100):
+            burn(heat, reach, frame / FPS)
+        assert all(0 <= dot <= 1 for row in heat for dot in row), "heat outside 0 to 1"
+        return heat, [sum(row) / len(row) for row in heat]
+
+    heat, low = burnt(0.25)
+    assert low[-1] > 0.5 and low[0] == 0, "an idle fire must be hot at the bottom and out at the top"
+    _, tall = burnt(1)
+    assert sum(tall) > 2 * sum(low), "a busy fire must reach higher than an idle one"
+    drawn = picture(heat)
+    assert drawn.count("\x1b[") < 40 * 15 and "▀" in drawn, "the picture is not drawn as it should be"
+    started = time.monotonic()
+    big = cold(110, 30)
+    for frame in range(20):
+        burn(big, 1, frame / FPS)
+        picture(big)
+    print(f"ok ({(time.monotonic() - started) / 20 * 1000:.0f} ms a frame at 110 x 30; {1000 // FPS} ms is the time there is)")
+
+
+if __name__ == "__main__":
+    check() if sys.argv[1:] == ["check"] else run()

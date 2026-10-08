@@ -13,11 +13,6 @@ brew "borders"                     # active-window glow (JankyBorders)
 brew "fastfetch"                   # system info (debloated config)
 brew "btop"                        # resource monitor (themed)
 
-# --- Audio visualizer ---
-brew "cava"                        # console audio visualizer
-cask "background-music"            # default output w/ loopback for cava; keeps volume keys working
-brew "switchaudio-osx"             # CLI output switching; showpiece launches/quits BGM around itself
-
 # --- Terminal + prompt ---
 cask "ghostty"                     # fast GPU terminal
 brew "starship"                    # cross-shell prompt

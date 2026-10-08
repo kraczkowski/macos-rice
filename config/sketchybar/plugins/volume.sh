@@ -9,4 +9,4 @@ case "$VOLUME" in
   *)                ICON="" ;;
 esac
 
-sketchybar --set "$NAME" icon="$ICON" icon.color=0xff{{linen}} label.drawing=off
+sketchybar --set "$NAME" icon="$ICON"
