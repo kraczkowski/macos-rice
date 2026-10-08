@@ -20,8 +20,9 @@ import shutil
 import sys
 import time
 
-# The colours of the dust as theme.ini names them, from the coolest to the hottest.
-GRADIENT = ("{{wine|rgb}}", "{{ember|rgb}}", "{{orange|rgb}}", "{{gold|rgb}}", "{{cream|rgb}}")
+# The colours of the dust as theme.ini names them, from the coolest to the hottest. The coolest is still a bright
+# one: a cell is either drawn or see-through, so dark dust would only be a dark blot on the glass.
+GRADIENT = ("{{ember|rgb}}", "{{orange|rgb}}", "{{gold|rgb}}", "{{cream|rgb}}")
 SHADES = 48  # how many steps of colour lie between no heat and the most
 FPS = 20
 
@@ -51,8 +52,8 @@ def speed():
 def dust(wide, high):
     """The dots that glow on a screen of that many dots, each as (row, column, the most heat it gets, where it is on the first wave, on the second)."""
     middle_x, middle_y = (wide - 1) / 2, (high - 1) / 2
-    edge = min(0.48 * wide, 1.4 * high)  # the outside of the ring, as far across as fits
-    hole = 0.22 * edge                    # the dark middle
+    edge = min(0.38 * wide, 1.1 * high)  # the outside of the ring, as far across as fits
+    hole = 0.2 * edge                     # the dark middle
     inside = 1.3 * hole                   # where the ring starts
     lit = []
     for y in range(high):
@@ -63,15 +64,15 @@ def dust(wide, high):
             out = math.hypot(dx, dy / TILT)   # from the middle along the tilted ring
             most = 0.0
             if hole <= far < 1.5 * hole:      # the halo: a round ring, hottest at the edge of the dark
-                most, turn, along = 0.9 * (1 - (far - hole) / (0.5 * hole)), math.atan2(dy, dx), far
+                most, turn, along = 1 - (far - hole) / (0.5 * hole), math.atan2(dy, dx), far
             # The ring itself. Its near half (below the middle) passes in front of the dark and of
             # the halo; its far half is hidden behind the dark.
             if inside <= out < edge and (dy > 0 or far >= hole):
                 ring = (1 - (out - inside) / (edge - inside)) ** 0.8
                 if dy > 0 or ring > most:
                     most, turn, along = ring, math.atan2(dy / TILT, dx), out
-            if most:
-                most *= 0.85 - 0.15 * math.cos(turn)  # the left side turns towards you
+            if most > 0.25:  # dimmer dust is left out, so the glass shows there
+                most *= 0.9 - 0.1 * math.cos(turn)  # the left side turns towards you
                 # Spirals: further out is further behind, so the arms trail.
                 lit.append((y, x, most, 2 * turn + 3 * math.log(along), 5 * turn + 4 * math.log(along)))
     return lit
@@ -81,7 +82,7 @@ def glow(heat, lit, spun):
     """The heat of every dot of dust when it has gone round by spun radians. heat is a list of rows, the top one first, changed in place."""
     sin = math.sin
     for y, x, most, one, two in lit:
-        heat[y][x] = most * (0.7 + 0.3 * sin(one - spun) * sin(two - 1.7 * spun))
+        heat[y][x] = most * (0.75 + 0.25 * sin(one - spun) * sin(two - 1.7 * spun))
 
 
 def cell(top, bottom):
