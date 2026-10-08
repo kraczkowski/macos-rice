@@ -8,8 +8,7 @@ BUILD="$REPO/build"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 echo "==> Installing packages from Brewfile"
-brew bundle --file="$REPO/Brewfile" || \
-  echo "    (background-music needs your password; run brew bundle in your own terminal to finish)"
+brew bundle --file="$REPO/Brewfile"
 
 echo "==> Writing theme.ini into the configs"
 "$REPO/bin/render"
@@ -31,7 +30,6 @@ for tool in aerospace sketchybar borders ghostty fastfetch btop; do
   link "$tool" "$HOME/.config/$tool"
 done
 link starship/starship.toml  "$HOME/.config/starship.toml"
-link cava/config             "$HOME/.config/cava/config"   # cava keeps its own shaders in that folder
 link vim/vimrc               "$HOME/.vimrc"
 link vim/colors              "$HOME/.vim/colors"
 link vim/plugin              "$HOME/.vim/plugin"
@@ -51,20 +49,20 @@ done
 
 # Firefox reads userChrome.css only from a profile that has this preference on.
 PREF='user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);'
-for profile in "$HOME/Library/Application Support/Firefox/Profiles"/*/; do
-  [ -d "$profile" ] || continue
-  link firefox/userChrome.css  "${profile}chrome/userChrome.css"
-  link firefox/userContent.css "${profile}chrome/userContent.css"
-  grep -qF "$PREF" "${profile}user.js" 2>/dev/null || echo "$PREF" >> "${profile}user.js"
-done
-for profile in "$HOME/Library/Application Support/zen/Profiles"/*/; do
-  [ -d "$profile" ] || continue
-  link zen/userChrome.css      "${profile}chrome/userChrome.css"
-  link firefox/userContent.css "${profile}chrome/userContent.css"
-  grep -qF "$PREF" "${profile}user.js" 2>/dev/null || echo "$PREF" >> "${profile}user.js"
-done
+# link_browser <its folder in Application Support> <its userChrome.css under build/>
+link_browser() {
+  local profile
+  for profile in "$HOME/Library/Application Support/$1/Profiles"/*/; do
+    [ -d "$profile" ] || continue
+    link "$2"                    "${profile}chrome/userChrome.css"
+    link firefox/userContent.css "${profile}chrome/userContent.css"
+    grep -qF "$PREF" "${profile}user.js" 2>/dev/null || echo "$PREF" >> "${profile}user.js"
+  done
+}
+link_browser Firefox firefox/userChrome.css
+link_browser zen     zen/userChrome.css
 
-echo "==> Setting the macOS accent and installing the VS Code theme"
+echo "==> Setting the macOS accent and the desktop picture"
 "$REPO/bin/apply-apps"
 
 # spicetify writes the theme into Spotify.app itself; a Spotify update undoes it until the next apply.
@@ -113,7 +111,6 @@ echo ""
 echo "Done. Final manual step: open AeroSpace.app once and grant Accessibility"
 echo "permission (System Settings > Privacy & Security > Accessibility)."
 echo "Switch each app theme on once:"
-echo "  VS Code   cmd+k cmd+t > Sunset Ember"
 echo "  Obsidian  Settings > Appearance > CSS snippets > sunset_ember, and Translucent window"
 echo "  Vesktop   Settings > Vencord > Themes > Sunset Ember"
 echo "  Firefox, Zen   restart them"

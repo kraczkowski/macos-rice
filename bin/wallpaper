@@ -19,22 +19,15 @@ The design and numbers of the last "Set as desktop" are kept in wallpaper.json.
 import configparser
 import hashlib
 import json
-import os
 import random
 import subprocess
 import sys
 from pathlib import Path
+from typing import Callable, NamedTuple
 
-try:
-    import numpy as np
-    from matplotlib import image
-    from matplotlib.colors import LinearSegmentedColormap
-except ImportError:
-    # Started by a Python that has neither (Space r in Vim, python3 bin/wallpaper): start again
-    # under uv, which installs what the first lines of this file list.
-    if os.environ.get("WALLPAPER_UNDER_UV"):
-        raise
-    os.execvpe("uv", ["uv", "run", "--script", __file__, *sys.argv[1:]], {**os.environ, "WALLPAPER_UNDER_UV": "1"})
+import numpy as np
+from matplotlib import image
+from matplotlib.colors import LinearSegmentedColormap
 
 # The colours of the picture by their names in theme.ini, from no light to the most.
 GRADIENT = ("base", "wine", "ember", "orange", "gold", "cream")
@@ -130,34 +123,42 @@ def julia(knob, wide, high):
     return (light - light.min()) / (np.ptp(light) or 1)
 
 
-# design: (its formula, its knobs). A knob is name: (lowest, highest, where it starts); whole numbers
-# make a slider that moves in whole steps. Every design has glow: how far the light reaches into
-# the dark (the picture is light ** (1 / glow)), so below 1 only the brightest parts stay lit.
+class Design(NamedTuple):
+    formula: Callable
+    glow: float  # where its glow starts
+    knobs: dict  # name: (lowest, highest, where it starts); whole numbers make a slider that moves in whole steps
+
+
 DESIGNS = {
-    "attractor": (attractor, {"a": (-3.0, 3.0, 1.5), "b": (-3.0, 3.0, -1.8), "c": (-2.0, 2.0, 1.6), "d": (-2.0, 2.0, 0.9), "glow": (0.1, 2.0, 0.5)}),
-    "flow": (flow, {
+    "attractor": Design(attractor, 0.5, {"a": (-3.0, 3.0, 1.5), "b": (-3.0, 3.0, -1.8), "c": (-2.0, 2.0, 1.6), "d": (-2.0, 2.0, 0.9)}),
+    "flow": Design(flow, 0.75, {
         "seed": (0, 99, 5),  # which wind
         "knots": (1.0, 12.0, 5.0),  # how many swirls fit on the screen
         "twist": (0.2, 4.0, 1.2),  # how hard the wind turns
         "length": (0.02, 0.6, 0.2),  # how far a grain is carried, in widths of the screen
-        "glow": (0.1, 2.0, 0.75),
     }),
-    "silk": (silk, {
+    "silk": Design(silk, 0.8, {
         "turns": (1.0, 30.0, 9.0),  # swings before the pen is lifted
         "ratio": (0.5, 4.0, 1.336),  # near 1.5 or 2 the figure almost closes and slowly turns
         "fade": (0.0, 4.0, 1.6),  # how fast the pendulums come to rest
         "spread": (0.0, 3.0, 0.5),  # how wide the ribbon is
         "mesh": (0, 80, 30),
-        "glow": (0.1, 2.0, 0.8),
     }),
-    "waves": (waves, {
+    "waves": Design(waves, 0.35, {
         "waves": (2, 16, 7),  # how many stones
         "scale": (5.0, 150.0, 40.0),  # how many ripples fit on the screen
         "bend": (0.0, 2.0, 0.02),  # 0: the stones are far away and the waves straight; 1: they lie at the screen's edge
-        "glow": (0.1, 2.0, 0.35),
     }),
-    "julia": (julia, {"re": (-1.5, 1.5, -0.4), "im": (-1.5, 1.5, 0.6), "zoom": (0.3, 20.0, 1.2), "glow": (0.1, 2.0, 0.5)}),
+    "julia": Design(julia, 0.5, {"re": (-1.5, 1.5, -0.4), "im": (-1.5, 1.5, 0.6), "zoom": (0.3, 20.0, 1.2)}),
 }
+
+
+def knobs_of(name):
+    """The knobs of the design called name, and the one every design has. glow is how far the light
+    reaches into the dark (the picture is light ** (1 / glow)), so below 1 only the brightest parts stay lit.
+    """
+    return DESIGNS[name].knobs | {"glow": (0.1, 2.0, DESIGNS[name].glow)}
+
 
 # ---------------------------------------------------------------------------------------------
 
@@ -198,7 +199,7 @@ def plane(wide, high):
 
 def light(d, wide, high):
     """The design d as a picture wide by high: the light of every dot, from 0 to 1."""
-    return np.clip(DESIGNS[d["design"]][0](d, wide, high), 0, 1) ** (1 / d["glow"])
+    return np.clip(DESIGNS[d["design"]].formula(d, wide, high), 0, 1) ** (1 / d["glow"])
 
 
 def dark(picture):
@@ -218,7 +219,7 @@ def theme_colours():
 
 def starts(name):
     """The design called name with every knob where it starts."""
-    return {"design": name} | {knob: start for knob, (low, high, start) in DESIGNS[name][1].items()}
+    return {"design": name} | {knob: start for knob, (low, high, start) in knobs_of(name).items()}
 
 
 def saved_design():
@@ -267,7 +268,7 @@ def designer(d, colours):
 
     def redraw(_=None):
         d = kept[radio.value_selected]
-        knobs = DESIGNS[d["design"]][1]
+        knobs = knobs_of(d["design"])
         # A slider's number comes as numpy's own kind; int() or float(), whichever the knob started as, makes it plain.
         d.update({knob: type(knobs[knob][2])(round(slider.val, 4)) for knob, slider in sliders.items()})
         shown.set_data(light(d, wide, high))
@@ -279,7 +280,7 @@ def designer(d, colours):
             slider.disconnect_events()
             slider.ax.remove()
         sliders.clear()
-        for row, (knob, (low, top, start)) in enumerate(DESIGNS[name][1].items()):
+        for row, (knob, (low, top, start)) in enumerate(knobs_of(name).items()):
             whole = isinstance(start, int)
             sliders[knob] = Slider(
                 figure.add_axes((0.78, 0.62 - 0.07 * row, 0.15, 0.03)), knob, low, top,
@@ -304,23 +305,20 @@ def designer(d, colours):
     def save_and_set(_):
         d = kept[radio.value_selected]
         SAVED.write_text(json.dumps(d, indent=2) + "\n", encoding="utf-8")
-        buttons[1].label.set_text("Drawing…")  # the picture for the screen takes a few seconds
+        set_button.label.set_text("Drawing…")  # the picture for the screen takes a few seconds
         figure.canvas.draw()
         figure.canvas.flush_events()
         set_desktop(d, colours)
-        buttons[1].label.set_text("Set as desktop")
+        set_button.label.set_text("Set as desktop")
         figure.canvas.draw_idle()
 
     radio.on_clicked(pick)
-    buttons = [
-        Button(figure.add_axes((0.70, 0.06, 0.11, 0.08)), "Surprise me", color=surface, hovercolor="#" + colours["line"]),
-        Button(figure.add_axes((0.83, 0.06, 0.14, 0.08)), "Set as desktop", color=surface, hovercolor="#" + colours["line"]),
-    ]
-    buttons[0].on_clicked(surprise)
-    buttons[1].on_clicked(save_and_set)
+    surprise_button = Button(figure.add_axes((0.70, 0.06, 0.11, 0.08)), "Surprise me", color=surface, hovercolor="#" + colours["line"])
+    set_button = Button(figure.add_axes((0.83, 0.06, 0.14, 0.08)), "Set as desktop", color=surface, hovercolor="#" + colours["line"])
+    surprise_button.on_clicked(surprise)
+    set_button.on_clicked(save_and_set)
     pick(d["design"])
     plt.show()
-    return figure, radio, sliders, buttons
 
 
 def check():

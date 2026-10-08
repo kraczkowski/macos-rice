@@ -64,14 +64,16 @@ def typed(text, values):
     return sorted({found.lower() for found in TYPED.findall(text)} | {c for c in colours if c in lower})
 
 
-def render(text, values, file):
+def render(text, values, file, problems):
     def value(match):
         name, form = match.groups()
         if name not in values:
-            sys.exit(f"{file}: names {{{{{name}}}}}, which theme.ini does not have")
-        if form and not COLOUR.fullmatch(values[name]):
-            sys.exit(f"{file}: {{{{{name}|{form}}}}} needs a colour, and '{values[name]}' is not one")
-        return {"rgb": rgb, "float": floats, None: str}[form](values[name])
+            problems.append(f"{file}: names {{{{{name}}}}}, which theme.ini does not have")
+        elif form and not COLOUR.fullmatch(values[name]):
+            problems.append(f"{file}: {{{{{name}|{form}}}}} needs a colour, and '{values[name]}' is not one")
+        else:
+            return {"rgb": rgb, "float": floats, None: str}[form](values[name])
+        return match.group()
 
     return NAME.sub(value, text)
 
@@ -87,7 +89,7 @@ def main():
             rendered[file] = None  # not text (an image, say): copied as it is
             continue
         problems += [f"{file.relative_to(REPO)}: types {colour}, name it instead" for colour in typed(text, values)]
-        rendered[file] = render(text, values, file.relative_to(REPO))
+        rendered[file] = render(text, values, file.relative_to(REPO), problems)
     if problems:
         sys.exit("\n".join(problems))
     for file, text in rendered.items():

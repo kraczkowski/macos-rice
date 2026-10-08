@@ -12,9 +12,10 @@ enable-normalization-opposite-orientation-for-nested-containers = true
 # Reload borders when AeroSpace starts (so the glow is always on)
 after-startup-command = ['exec-and-forget borders']
 
-# On workspace change: update the SketchyBar highlight, and take the showpiece down
-# when you leave it. See bin/on-workspace-change.
-exec-on-workspace-change = ['/bin/bash', '{{repo}}/bin/on-workspace-change']
+# On workspace change: the bar's dot for the active workspace.
+exec-on-workspace-change = ['/bin/bash', '-c',
+    'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE'
+]
 
 # Tiling gaps (the breathing room that makes a rice look clean)
 [gaps]
@@ -25,7 +26,6 @@ outer.bottom     = 8
 outer.top        = 8     # macOS reserves 32px at top (covers the bar); just an 8px gap
 outer.right      = 8
 
-# Default layout for new windows: tiled, accordion as fallback
 [mode.main.binding]
 # --- Layout ---
 alt-slash = 'layout tiles horizontal vertical'   # toggle split orientation (also escapes accordion -> tiles)
@@ -66,8 +66,8 @@ alt-shift-5 = 'move-node-to-workspace 5'
 alt-shift-6 = 'move-node-to-workspace 6'
 alt-shift-9 = 'move-node-to-workspace 9'
 
-# Launch the showpiece (classic unixporn layout) on workspace 9
-alt-shift-s = ['workspace 9', 'exec-and-forget "{{repo}}/bin/showpiece" up']
+# The showpiece (classic unixporn layout) on workspace 9: open it, go to it, or from there close it
+alt-shift-s = 'exec-and-forget "{{repo}}/bin/showpiece"'
 
 # Open the custom browser. Full path to uv: AeroSpace does not read ~/.zshrc.
 alt-b = 'exec-and-forget /opt/homebrew/bin/uv run "$HOME/dev/projects/browser/browser.py"'
@@ -93,11 +93,6 @@ backspace = ['close-all-windows-but-current', 'mode main']
 # --- App auto-assignment -----------------------------------------------------
 # Apps are matched by bundle id (app-id) and sent to a fixed workspace on open.
 # Find any app's id with:  osascript -e 'id of app "AppName"'
-
-# 1 · code
-[[on-window-detected]]
-if.app-id = 'com.microsoft.VSCode'
-run = 'move-node-to-workspace 1'
 
 # 2 · web
 [[on-window-detected]]
