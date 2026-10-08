@@ -7,15 +7,15 @@ PLUGIN_DIR="$CONFIG_DIR/plugins"
 
 FONT="{{font}}"
 
-# --- Bar appearance ---
+# --- Bar appearance: no bar at all, only its items over the desktop picture (0x00 is fully clear) ---
 sketchybar --bar \
   height=28 \
-  blur_radius=30 \
+  blur_radius=0 \
   position=top \
   sticky=on \
   padding_left=8 \
   padding_right=8 \
-  color=0xf0{{base}} \
+  color=0x00{{base}} \
   corner_radius=8 \
   y_offset=5 \
   margin=8
