@@ -1,7 +1,7 @@
 """matplotlib backend: the stock macOS one, restyled so plot windows match Ghostty.
 
 Each figure window gets a see-through, blurred background in the Sunset Ember base colour and a
-transparent title bar with no title. Selected by MPLBACKEND=module://ember_backend (see install.sh).
+transparent title bar with no title. Selected by MPLBACKEND=module://ember_backend (see config/zsh/rice.zsh).
 Saved images are not affected: they keep the solid background from matplotlibrc.
 """
 

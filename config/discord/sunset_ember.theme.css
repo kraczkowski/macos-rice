@@ -11,9 +11,6 @@
 
 .theme-dark,
 .visual-refresh.theme-dark {
-  --background-base-lowest: #{{base}} !important;
-  --background-base-lower: #{{base}} !important;
-  --background-base-low: #{{base}} !important;
   --background-surface-high: #{{surface}} !important;
   --background-surface-higher: #{{surface}} !important;
   --background-surface-highest: #{{line}} !important;
@@ -48,10 +45,7 @@
   --brand-560: #{{oxide}} !important;
   --brand-360: #{{flame}} !important;
 
-  --background-primary: #{{base}} !important;
-  --background-secondary: #{{base}} !important;
   --background-secondary-alt: #{{surface}} !important;
-  --background-tertiary: #{{base}} !important;
   --background-floating: #{{surface}} !important;
   --background-modifier-hover: #{{surface}} !important;
   --background-modifier-selected: #{{line}} !important;
@@ -62,7 +56,8 @@
 
 /* Glass, as in the terminal: needs "macosVibrancyStyle": "fullscreen-ui" in Vesktop's
    settings/settings.json, which lets macOS blur what lies behind. The window gets one tint of the
-   base colour and the panes inside it are clear; menus and dialogs use the surface colours and stay solid. */
+   base colour and the panes inside it are clear (the six backgrounds below, in both of Discord's
+   sets of names); menus and dialogs use the surface colours and stay solid. */
 html,
 #app-mount {
   background: transparent !important;

@@ -16,13 +16,11 @@ $rust """
 palette = "sunset_ember"
 
 [palettes.sunset_ember]
-base    = "#{{base}}"   # dark teal base
 text    = "#{{text}}"   # warm white
 ember   = "#{{ember}}"   # ember accent  — prompt pill (os + directory)
 oxide   = "#{{oxide}}"   # oxidized iron — git
 sand    = "#{{sand}}"   # warm sand     — languages
 surface = "#{{surface}}"   # dark teal surface
-red     = "#{{ember}}"   # error
 
 [os]
 disabled = false

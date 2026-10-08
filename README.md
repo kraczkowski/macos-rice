@@ -102,6 +102,7 @@ AeroSpace uses `alt` as the modifier.
 | `alt-shift-space` | Toggle float / tile |
 | `alt-shift-s` | The showpiece (workspace 9): open it, go to it, or from there close it |
 | `alt-b` | Open the custom browser |
+| `alt-m` | Spotify in a terminal (workspace 5): open it, or go to it |
 | `alt-shift-;` | Service mode (reload config, reset layout, …) |
 | `ctrl-\`` | Ghostty drop-down quick terminal (global) |
 

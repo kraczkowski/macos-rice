@@ -14,7 +14,6 @@
 set -uo pipefail
 
 WS=9
-PANES="fastfetch fire btop"
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 LOCK="${TMPDIR:-/tmp}/rice_showpiece.lock"
 

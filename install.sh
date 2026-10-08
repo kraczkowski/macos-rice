@@ -42,46 +42,43 @@ link discord/sunset_ember.theme.css "$HOME/Library/Application Support/vesktop/t
 link spicetify/Themes/SunsetEmber   "$HOME/.config/spicetify/Themes/SunsetEmber"
 link qbittorrent/config.json        "$HOME/.config/qBittorrent/themes/default/config.json"   # its built-in theme, overridden
 
-# Obsidian keeps its snippets per vault, and lists its vaults in obsidian.json.
-python3 -c 'import json, sys; [print(v["path"]) for v in json.load(open(sys.argv[1]))["vaults"].values()]' \
-  "$HOME/Library/Application Support/obsidian/obsidian.json" 2>/dev/null |
-while read -r vault; do
-  [ -d "$vault/.obsidian" ] && link obsidian/sunset_ember.css "$vault/.obsidian/snippets/sunset_ember.css"
-done
+# Obsidian keeps its snippets per vault, and lists its vaults in obsidian.json. Without Obsidian
+# there is no such file, and a vault that was deleted stays on the list: neither stops the install.
+VAULTS="$HOME/Library/Application Support/obsidian/obsidian.json"
+if [ -f "$VAULTS" ]; then
+  python3 -c 'import json, sys; [print(v["path"]) for v in json.load(open(sys.argv[1])).get("vaults", {}).values()]' "$VAULTS" |
+  while read -r vault; do
+    [ ! -d "$vault/.obsidian" ] || link obsidian/sunset_ember.css "$vault/.obsidian/snippets/sunset_ember.css"
+  done
+fi
 
-# theirs <file under build/> <where bin/apply-apps copies it>: a browser's userContent.css is
-# copied, not linked (see bin/apply-apps). A file already there that is not that copy is moved aside.
-theirs() {
-  local src="$BUILD/$1" dest="$2"
-  if [ -e "$dest" ] && [ ! -L "$dest" ] && ! cmp -s "$src" "$dest"; then
-    echo "    moving aside $dest -> $dest.bak-$STAMP"
-    mv "$dest" "$dest.bak-$STAMP"
-  fi
+# browser <firefox|zen> <its folder of profiles> <a line for user.js>...: in every profile, the
+# link to userChrome.css and the preferences. userContent.css is copied in, not linked (see
+# bin/apply-apps), so a file already there that is not that copy is moved aside.
+browser() {
+  local name="$1" profiles="$2" profile content pref
+  shift 2
+  for profile in "$profiles"/*/; do
+    [ -d "$profile" ] || continue
+    link "$name/userChrome.css" "${profile}chrome/userChrome.css"
+    content="${profile}chrome/userContent.css"
+    if [ -e "$content" ] && [ ! -L "$content" ] && ! cmp -s "$BUILD/$name/userContent.css" "$content"; then
+      echo "    moving aside $content -> $content.bak-$STAMP"
+      mv "$content" "$content.bak-$STAMP"
+    fi
+    for pref in "$@"; do
+      grep -qF "$pref" "${profile}user.js" 2>/dev/null || echo "$pref" >> "${profile}user.js"
+    done
+  done
 }
-
 # Firefox reads userChrome.css only from a profile that has this preference on.
-PREF='user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);'
-for profile in "$HOME/Library/Application Support/Firefox/Profiles"/*/; do
-  [ -d "$profile" ] || continue
-  link firefox/userChrome.css  "${profile}chrome/userChrome.css"
-  theirs firefox/userContent.css "${profile}chrome/userContent.css"
-  grep -qF "$PREF" "${profile}user.js" 2>/dev/null || echo "$PREF" >> "${profile}user.js"
-done
+STYLESHEETS='user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);'
+browser firefox "$HOME/Library/Application Support/Firefox/Profiles" "$STYLESHEETS"
 # Zen turns its glass to flat grey in a window that is not focused, and gives every page a solid
 # backdrop: both off, so the glass stays, and shows through a page with no background of its own.
-ZEN_PREFS=(
-  "$PREF"
-  'user_pref("zen.view.grey-out-inactive-windows", false);'
+browser zen "$HOME/Library/Application Support/zen/Profiles" "$STYLESHEETS" \
+  'user_pref("zen.view.grey-out-inactive-windows", false);' \
   'user_pref("browser.tabs.allow_transparent_browser", true);'
-)
-for profile in "$HOME/Library/Application Support/zen/Profiles"/*/; do
-  [ -d "$profile" ] || continue
-  link zen/userChrome.css  "${profile}chrome/userChrome.css"
-  theirs zen/userContent.css "${profile}chrome/userContent.css"
-  for pref in "${ZEN_PREFS[@]}"; do
-    grep -qF "$pref" "${profile}user.js" 2>/dev/null || echo "$pref" >> "${profile}user.js"
-  done
-done
 
 echo "==> Setting the macOS accent and the desktop picture"
 "$REPO/bin/apply-apps"

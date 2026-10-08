@@ -23,7 +23,6 @@ axes.titleweight:   600
 axes.titlelocation: left
 axes.titlepad:      12
 
-# ember, gold, teal, sand, olive, rose, sky
 axes.prop_cycle: cycler('color', ['{{flame}}', '{{gold}}', '{{teal}}', '{{sand}}', '{{olive}}', '{{rose}}', '{{sky}}'])
 lines.linewidth:   2
 lines.markersize:  5
