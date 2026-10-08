@@ -1,0 +1,13 @@
+theme = "ember"
+
+# Spotify counts requests per app id, and the id the player ships with (ncspot's) is shared by
+# everyone, so it is out of quota most of the time: every list stays empty (429 in the log).
+# Your own id goes in ~/.config/spotify-player/client_id, outside this repo; without that file
+# the shared one is used.
+client_id_command = { command = "sh", args = ["-c", "cat ~/.config/spotify-player/client_id 2>/dev/null || echo d420a117a32841c2b3474932e49fb54b"] }
+
+# The player sends both playlist calls through the shared id by default. The list of playlists
+# loads fine with your own id, so only their contents stay on the shared one: Spotify gives a
+# new app id the tracks of playlists you own (checked: 78 of 78) but none of the ones you
+# follow (0), and the shared id still gets those.
+ncspot_only_get_endpoints = ["playlists/"]

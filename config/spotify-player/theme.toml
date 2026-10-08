@@ -1,0 +1,17 @@
+# No palette on purpose: every colour left out is the terminal's, and Ghostty's are the theme's.
+[[themes]]
+name = "ember"
+
+# Named only where the player's own choice is hard to read here: it puts secondary text in the
+# terminal's bright black, which this theme keeps nearly as dark as the background.
+[themes.component_style]
+block_title           = { fg = "#{{flame}}", modifiers = ["Bold"] }
+playback_genres       = { fg = "#{{sand}}", modifiers = ["Italic"] }
+playback_metadata     = { fg = "#{{sand}}" }
+playlist_desc         = { fg = "#{{sand}}" }
+table_header          = { fg = "#{{steel}}" }
+# The time is written in each colour over the other, so the two have to read both ways.
+playback_progress_bar = { fg = "#{{flame}}", bg = "#{{black}}" }
+current_playing       = { fg = "#{{gold}}", modifiers = ["Bold"] }
+lyrics_playing        = { fg = "#{{gold}}", modifiers = ["Bold"] }
+selection             = { bg = "#{{mahogany}}", modifiers = ["Bold"] }

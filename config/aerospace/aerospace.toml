@@ -67,6 +67,8 @@ alt-shift-6 = 'move-node-to-workspace 6'
 alt-shift-9 = 'move-node-to-workspace 9'
 
 # Launch the showpiece (classic unixporn layout) on workspace 9
+# Spotify in a terminal window; a second press only goes to it. The title is what the rule below matches.
+alt-m = ['workspace 5', 'exec-and-forget pgrep -x spotify_player || open -na Ghostty.app --args --title=spotify --confirm-close-surface=false -e /opt/homebrew/bin/spotify_player']
 alt-shift-s = ['workspace 9', 'exec-and-forget "{{repo}}/bin/showpiece" up']
 
 # Open the custom browser. Full path to uv: AeroSpace does not read ~/.zshrc.
@@ -100,8 +102,12 @@ if.app-id = 'com.microsoft.VSCode'
 run = 'move-node-to-workspace 1'
 
 # 2 · web
+# Firefox's and Zen's pop-up dialogs (a passkey prompt, a file picker) are windows too, without a
+# title. Sent to 2 while the browser sits on another workspace they open out of sight, so only
+# windows with a title are moved.
 [[on-window-detected]]
 if.app-id = 'org.mozilla.firefox'
+if.window-title-regex-substring = '.'
 run = 'move-node-to-workspace 2'
 
 [[on-window-detected]]
@@ -110,6 +116,7 @@ run = 'move-node-to-workspace 2'
 
 [[on-window-detected]]
 if.app-id = 'app.zen-browser.zen'
+if.window-title-regex-substring = '.'
 run = 'move-node-to-workspace 2'
 
 # 3 · notes
@@ -155,3 +162,8 @@ run = 'layout floating'
 if.app-name-regex-substring = '^python$'
 if.window-title-regex-substring = '^wallpaper$'
 run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.mitchellh.ghostty'
+if.window-title-regex-substring = '^spotify$'
+run = 'move-node-to-workspace 5'

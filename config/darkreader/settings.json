@@ -1,0 +1,11 @@
+{
+  "schemeVersion": 2,
+  "enabled": true,
+  "theme": {
+    "mode": 1,
+    "darkSchemeBackgroundColor": "#{{base}}",
+    "darkSchemeTextColor": "#{{text}}",
+    "selectionColor": "#{{mahogany}}",
+    "scrollbarColor": "#{{line}}"
+  }
+}

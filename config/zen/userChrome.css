@@ -12,7 +12,19 @@
   opacity: 0 !important;
 }
 
+/* The selected tab, in the colour of every other selection. */
+.tabbrowser-tab:is([visuallyselected], [multiselected]) .tab-background {
+  background: #{{mahogany}} !important;
+}
+
+.tabbrowser-tab:is([visuallyselected], [multiselected]) .tab-label {
+  color: #{{cream}} !important;
+}
+
 :root {
+  /* The pills: the address bar, and what is under the mouse. */
+  --zen-toolbar-element-bg: color-mix(in srgb, #{{surface}} 80%, transparent) !important;
+  --zen-toolbar-element-bg-hover: color-mix(in srgb, #{{line}} 80%, transparent) !important;
   --zen-primary-color: #{{ember}} !important;
   --toolbox-textcolor: #{{text}} !important;
   --toolbar-color: #{{text}} !important;

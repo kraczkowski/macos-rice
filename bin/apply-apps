@@ -18,3 +18,18 @@ if [ -x "$code" ]; then
   (cd "$BUILD/vscode" && zip -qr "$BUILD/sunset-ember.vsix" .)
   "$code" --install-extension "$BUILD/sunset-ember.vsix" --force >/dev/null
 fi
+
+# Firefox and Zen read userContent.css from their sandboxed page processes, which cannot follow a
+# link out of the profile, so it is copied in. (userChrome.css is read unsandboxed: a link will do.)
+user_content() {  # <firefox|zen> <its folder of profiles>
+  local profile dest
+  for profile in "$2"/*/; do
+    [ -d "$profile" ] || continue
+    dest="${profile}chrome/userContent.css"
+    mkdir -p "${profile}chrome"
+    [ ! -L "$dest" ] || rm "$dest"   # a link from an earlier install: cp would write through it, into build/
+    cp "$BUILD/$1/userContent.css" "$dest"
+  done
+}
+user_content firefox "$HOME/Library/Application Support/Firefox/Profiles"
+user_content zen     "$HOME/Library/Application Support/zen/Profiles"

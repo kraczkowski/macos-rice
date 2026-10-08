@@ -1,0 +1,23 @@
+/* Websites that let Zen's glass show through. Zen draws a page see-through only with
+   browser.tabs.allow_transparent_browser on (install.sh sets it in user.js), and only where the
+   page paints no background of its own: each block here takes that background off one site. */
+
+@-moz-document domain("youtube.com") {
+  html,
+  body,
+  ytd-app {
+    background: transparent !important;
+  }
+
+  /* YouTube paints the page, the side menu and the bar of chips from this one variable. */
+  html {
+    --yt-spec-base-background: transparent !important;
+  }
+
+  /* The bar on top keeps its blur of what scrolls under it, without the dark tint. */
+  ytd-masthead,
+  #background.ytd-masthead,
+  #frosted-glass {
+    background: transparent !important;
+  }
+}

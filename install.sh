@@ -36,6 +36,8 @@ link vim/vimrc               "$HOME/.vimrc"
 link vim/colors              "$HOME/.vim/colors"
 link vim/plugin              "$HOME/.vim/plugin"
 link matplotlib/matplotlibrc "$HOME/.matplotlib/matplotlibrc"
+link spotify-player/app.toml   "$HOME/.config/spotify-player/app.toml"   # files, not the folder: the client id lives beside them
+link spotify-player/theme.toml "$HOME/.config/spotify-player/theme.toml"
 
 echo "==> Linking the app themes"
 link discord/sunset_ember.theme.css "$HOME/Library/Application Support/vesktop/themes/sunset_ember.theme.css"
@@ -49,19 +51,38 @@ while read -r vault; do
   [ -d "$vault/.obsidian" ] && link obsidian/sunset_ember.css "$vault/.obsidian/snippets/sunset_ember.css"
 done
 
+# theirs <file under build/> <where bin/apply-apps copies it>: a browser's userContent.css is
+# copied, not linked (see bin/apply-apps). A file already there that is not that copy is moved aside.
+theirs() {
+  local src="$BUILD/$1" dest="$2"
+  if [ -e "$dest" ] && [ ! -L "$dest" ] && ! cmp -s "$src" "$dest"; then
+    echo "    moving aside $dest -> $dest.bak-$STAMP"
+    mv "$dest" "$dest.bak-$STAMP"
+  fi
+}
+
 # Firefox reads userChrome.css only from a profile that has this preference on.
 PREF='user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);'
 for profile in "$HOME/Library/Application Support/Firefox/Profiles"/*/; do
   [ -d "$profile" ] || continue
   link firefox/userChrome.css  "${profile}chrome/userChrome.css"
-  link firefox/userContent.css "${profile}chrome/userContent.css"
+  theirs firefox/userContent.css "${profile}chrome/userContent.css"
   grep -qF "$PREF" "${profile}user.js" 2>/dev/null || echo "$PREF" >> "${profile}user.js"
 done
+# Zen turns its glass to flat grey in a window that is not focused, and gives every page a solid
+# backdrop: both off, so the glass stays, and shows through a page with no background of its own.
+ZEN_PREFS=(
+  "$PREF"
+  'user_pref("zen.view.grey-out-inactive-windows", false);'
+  'user_pref("browser.tabs.allow_transparent_browser", true);'
+)
 for profile in "$HOME/Library/Application Support/zen/Profiles"/*/; do
   [ -d "$profile" ] || continue
-  link zen/userChrome.css      "${profile}chrome/userChrome.css"
-  link firefox/userContent.css "${profile}chrome/userContent.css"
-  grep -qF "$PREF" "${profile}user.js" 2>/dev/null || echo "$PREF" >> "${profile}user.js"
+  link zen/userChrome.css  "${profile}chrome/userChrome.css"
+  theirs zen/userContent.css "${profile}chrome/userContent.css"
+  for pref in "${ZEN_PREFS[@]}"; do
+    grep -qF "$pref" "${profile}user.js" 2>/dev/null || echo "$pref" >> "${profile}user.js"
+  done
 done
 
 echo "==> Setting the macOS accent and installing the VS Code theme"

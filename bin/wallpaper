@@ -19,6 +19,7 @@ The design and numbers of the last "Set as desktop" are kept in wallpaper.json.
 import configparser
 import hashlib
 import json
+import math
 import os
 import random
 import subprocess
@@ -36,8 +37,9 @@ except ImportError:
         raise
     os.execvpe("uv", ["uv", "run", "--script", __file__, *sys.argv[1:]], {**os.environ, "WALLPAPER_UNDER_UV": "1"})
 
-# The colours of the picture by their names in theme.ini, from no light to the most.
-GRADIENT = ("base", "wine", "ember", "orange", "gold", "cream")
+# The colours of the picture by their names in theme.ini, from no light to the most. The most is
+# ember itself: nothing in the picture is brighter or more orange than the accent of the rice.
+GRADIENT = ("base", "ember")
 POINTS = 16  # a design made of points throws this many for every dot of the picture: fewer is faster and grainier
 
 
@@ -130,10 +132,77 @@ def julia(knob, wide, high):
     return (light - light.min()) / (np.ptp(light) or 1)
 
 
+# What the window shows for an equation (between $ signs matplotlib sets it as mathematics) and the
+# same thing for numpy. x runs along a curve, from -1 to 1; c is the number that differs from one
+# curve to the next, also from -1 to 1. The answer is the point (x, y) on a screen that reaches
+# from -1 to 1 top to bottom: an equation stretches its curve to fit that.
+EQUATIONS = {
+    r"$y = c\,x^2$": lambda x, c: (1.5 * x, 2 * c * x**2),  # parabolas
+    r"$x^2 + y^2 = c^2$": lambda x, c: (c * np.cos(np.pi * x), c * np.sin(np.pi * x)),  # circles
+    r"$y = x^3 + c\,x$": lambda x, c: (1.5 * x, x**3 + c * x),
+    r"$y = c\,\sin x$": lambda x, c: (1.5 * x, c * np.sin(2 * np.pi * x)),  # a string, plucked
+    r"$y = \sin(x + c)$": lambda x, c: (1.5 * x, 0.8 * np.sin(np.pi * (2 * x + c))),  # one wave, moving
+    r"$y = \sin(c\,x)$": lambda x, c: (1.5 * x, 0.8 * np.sin(12 * c * x)),  # waves of every length
+    r"$y = c\,e^{-x^2}$": lambda x, c: (1.5 * x, c * np.exp(-((2.5 * x) ** 2))),  # bell curves
+    r"$r = e^{\theta + c}$": lambda x, c: (np.exp(2 * x - 1.5) * np.cos(np.pi * (3 * x + c)), np.exp(2 * x - 1.5) * np.sin(np.pi * (3 * x + c))),  # the spiral of a shell
+    r"$r = c + \cos\theta$": lambda x, c: (0.8 * (c + np.cos(np.pi * x)) * np.cos(np.pi * x) - 0.6, 0.8 * (c + np.cos(np.pi * x)) * np.sin(np.pi * x)),  # limaçons: a heart at c = 1
+}
+
+
+def curves(knob, wide, high):
+    """A family of curves: one equation drawn many times, each time with another number for c, evenly
+    from -1 to 1. That is all a fan of parabolas, a set of ripples or a whirlpool is.
+
+    A few of the curves are bright and most are faint, picked at random, which is what makes them
+    look like strands of hair or light and not like graph paper.
+    """
+    rng = np.random.default_rng(0)
+    count, equation = int(knob["curves"]), EQUATIONS[knob["equation"]]
+    bright = np.cumsum(rng.random(count) ** 3)  # cubed: most land near 0, a few near 1
+    middle = [float(at) for at in equation(knob["along"], knob["across"])]  # the point of the family the screen looks at
+    cos, sin = knob["zoom"] * math.cos(2 * math.pi * knob["turn"]), knob["zoom"] * math.sin(2 * math.pi * knob["turn"])
+
+    def throw(points, along, pick):
+        """points of the family, their x between along[0] and along[1] and their curve picked from
+        pick[0] to pick[1] (0 is the first curve, bright[-1] the last): what was drawn for each, and where it fell.
+        """
+        x, picked = rng.uniform(*along, points).astype(np.float32), rng.uniform(*pick, points)
+        curve = np.searchsorted(bright, picked)  # a curve is picked as often as it is bright
+        # 0.5 puts the first and last curve half a step in from -1 and 1; the random part widens the hairline into a soft thread
+        c = ((curve + 0.5 + 0.12 * rng.standard_normal(points, dtype=np.float32)) * 2 / count - 1).astype(np.float32)
+        u, v = equation(x, c)
+        u, v = u - middle[0], v - middle[1]
+        return x, picked, 0.5 + (u * cos - v * sin) * high / wide / 2, 0.5 - (u * sin + v * cos) / 2
+
+    # Zoomed in, most of the family lies off the screen. A first handful shows which stretch of x and
+    # which curves are on it at all, and the rest are thrown only there: none wasted, no grain.
+    x, picked, u, v = throw(200_000, (-1, 1), (0, bright[-1]))
+    seen = (u >= 0) & (u < 1) & (v >= 0) & (v < 1)
+    if not seen.any():
+        return np.zeros((high, wide))
+    along = (x[seen].min() - 0.02, x[seen].max() + 0.02)
+    pick = (max(picked[seen].min() - 0.02 * bright[-1], 0), min(picked[seen].max() + 0.02 * bright[-1], bright[-1]))
+    total = np.zeros((high, wide))
+    for _ in range(POINTS // 2):
+        x, picked, u, v = throw(wide * high, along, pick)
+        total += landed(u, v, wide, high)
+    return glow(total)
+
+
 # design: (its formula, its knobs). A knob is name: (lowest, highest, where it starts); whole numbers
-# make a slider that moves in whole steps. Every design has glow: how far the light reaches into
-# the dark (the picture is light ** (1 / glow)), so below 1 only the brightest parts stay lit.
+# make a slider that moves in whole steps. Or it is name: the names to pick from, of which the first
+# is where it starts. Every design has glow: how far the light reaches into the dark (the picture
+# is light ** (1 / glow)), so below 1 only the brightest parts stay lit.
 DESIGNS = {
+    "curves": (curves, {
+        "equation": tuple(EQUATIONS),
+        "curves": (2, 400, 200),  # how many
+        "zoom": (0.3, 10.0, 3.0),  # zoomed in, any family becomes long strands lying side by side
+        "turn": (0.0, 1.0, 0.5),  # the picture turned to the left, in full turns: 0.5 is upside down
+        "along": (-1.0, 1.0, 0.61),  # the middle of the screen looks at one point of the family: this far along a curve
+        "across": (-1.0, 1.0, 0.7),  # and on the curve with this c
+        "glow": (0.1, 2.0, 0.25),
+    }),
     "attractor": (attractor, {"a": (-3.0, 3.0, 1.5), "b": (-3.0, 3.0, -1.8), "c": (-2.0, 2.0, 1.6), "d": (-2.0, 2.0, 0.9), "glow": (0.1, 2.0, 0.5)}),
     "flow": (flow, {
         "seed": (0, 99, 5),  # which wind
@@ -201,9 +270,16 @@ def light(d, wide, high):
     return np.clip(DESIGNS[d["design"]][0](d, wide, high), 0, 1) ** (1 / d["glow"])
 
 
-def dark(picture):
-    """Whether next to nothing of the picture is lit: a formula that came to nothing."""
-    return (picture > 0.1).mean() < 0.02
+def dark(picture, glow):
+    """Whether next to nothing of the picture is lit: a formula that came to nothing. Judged as it
+    was before glow, or with glow turned down every picture would count as dark.
+    """
+    return (picture**glow > 0.3).mean() < 0.02
+
+
+def named(knob):
+    """Whether a knob of DESIGNS picks from names: ("first", "second") where a number has (lowest, highest, start)."""
+    return isinstance(knob[0], str)
 
 
 def gradient(colours):
@@ -218,14 +294,16 @@ def theme_colours():
 
 def starts(name):
     """The design called name with every knob where it starts."""
-    return {"design": name} | {knob: start for knob, (low, high, start) in DESIGNS[name][1].items()}
+    return {"design": name} | {knob: values[0] if named(values) else values[2] for knob, values in DESIGNS[name][1].items()}
 
 
 def saved_design():
     """The design of the last "Set as desktop" and its numbers; before the first one, the first design."""
     saved = json.loads(SAVED.read_text(encoding="utf-8")) if SAVED.exists() else {}
     d = starts(saved["design"] if saved.get("design") in DESIGNS else next(iter(DESIGNS)))
-    return d | {knob: saved[knob] for knob in d if knob in saved}
+    knobs = DESIGNS[d["design"]][1]
+    # A name that is no longer one to pick from (an equation since renamed) is left where the knob starts.
+    return d | {knob: saved[knob] for knob, values in knobs.items() if knob in saved and (not named(values) or saved[knob] in values)}
 
 
 def set_desktop(d, colours):
@@ -262,14 +340,17 @@ def designer(d, colours):
     preview.set_axis_off()
     shown = preview.imshow(np.zeros((high, wide)), cmap=gradient(colours), vmin=0, vmax=1, interpolation="bilinear")
     kept = {name: starts(name) for name in DESIGNS} | {d["design"]: d}  # each design's numbers, while the window is open
-    radio = RadioButtons(figure.add_axes((0.70, 0.70, 0.12, 0.27), frameon=False), list(DESIGNS), active=list(DESIGNS).index(d["design"]), activecolor=lit, radio_props={"edgecolor": text})
+    radio = RadioButtons(figure.add_axes((0.70, 0.66, 0.12, 0.32), frameon=False), list(DESIGNS), active=list(DESIGNS).index(d["design"]), activecolor=lit, radio_props={"edgecolor": text})
+    caption = figure.text(0.90, 0.82, "", ha="center", va="center", fontsize=15, color="#" + colours["gold"])  # the names picked: the equation
     sliders = {}
 
     def redraw(_=None):
         d = kept[radio.value_selected]
         knobs = DESIGNS[d["design"]][1]
-        # A slider's number comes as numpy's own kind; int() or float(), whichever the knob started as, makes it plain.
-        d.update({knob: type(knobs[knob][2])(round(slider.val, 4)) for knob, slider in sliders.items()})
+        for knob, slider in sliders.items():
+            # A slider's number comes as numpy's own kind; int() or float(), whichever the knob started as, makes it plain.
+            d[knob] = knobs[knob][int(slider.val)] if named(knobs[knob]) else type(knobs[knob][2])(round(slider.val, 4))
+        caption.set_text("\n".join(d[knob] for knob, values in knobs.items() if named(values)))
         shown.set_data(light(d, wide, high))
         figure.canvas.draw_idle()
 
@@ -279,13 +360,16 @@ def designer(d, colours):
             slider.disconnect_events()
             slider.ax.remove()
         sliders.clear()
-        for row, (knob, (low, top, start)) in enumerate(DESIGNS[name][1].items()):
+        for row, (knob, values) in enumerate(DESIGNS[name][1].items()):
+            # A knob that picks a name is a slider over the places in its row of names.
+            low, top, start = (0, len(values) - 1, values.index(kept[name][knob])) if named(values) else (*values[:2], kept[name][knob])
             whole = isinstance(start, int)
             sliders[knob] = Slider(
-                figure.add_axes((0.78, 0.62 - 0.07 * row, 0.15, 0.03)), knob, low, top,
-                valinit=kept[name][knob], valstep=1 if whole else None, valfmt="%d" if whole else "%.3f", initcolor="none",
+                figure.add_axes((0.78, 0.60 - 0.065 * row, 0.15, 0.03)), knob, low, top,
+                valinit=start, valstep=1 if whole else None, valfmt="%d" if whole else "%.3f", initcolor="none",
                 color=lit, track_color=surface, handle_style={"facecolor": text, "edgecolor": lit, "size": 9},
             )
+            sliders[knob].valtext.set_visible(not named(values))  # the caption shows the name, not its place in the row
             sliders[knob].on_changed(redraw)
         redraw()
 
@@ -295,10 +379,11 @@ def designer(d, colours):
             for knob, slider in sliders.items():
                 if knob != "glow":
                     slider.eventson = False  # or every one of them would redraw the picture
-                    slider.set_val(random.uniform(slider.valmin, slider.valmax))
+                    value = random.uniform(slider.valmin, slider.valmax)
+                    slider.set_val(round(value) if slider.valstep else value)
                     slider.eventson = True
             redraw()
-            if not dark(shown.get_array()):
+            if not dark(shown.get_array(), sliders["glow"].val):
                 break
 
     def save_and_set(_):
@@ -326,9 +411,10 @@ def designer(d, colours):
 def check():
     """Every design, drawn small with its knobs where they start, gives a picture that is whole and not dark."""
     for name in DESIGNS:
-        picture = light(starts(name), WIDTH // 10, HEIGHT // 10)
+        d = starts(name)
+        picture = light(d, WIDTH // 10, HEIGHT // 10)
         assert picture.shape == (HEIGHT // 10, WIDTH // 10) and np.isfinite(picture).all(), f"{name}: the picture is broken"
-        assert not dark(picture), f"{name}: the picture is all but dark"
+        assert not dark(picture, d["glow"]), f"{name}: the picture is all but dark"
         print(f"{name}: ok")
 
 
