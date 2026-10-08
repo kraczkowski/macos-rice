@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""An ember black hole in the terminal, for the showpiece. It spins as fast as the machine is busy.
+
+    hole        spin until ctrl-c
+    hole check  draw a small one with no screen, and stop if it is not a black hole
+
+The screen is a grid of heat, from 0 (none) to 1 (the most). The hole is a ring of glowing dust
+seen from a little above, so it is drawn as a flat ellipse, with a thin halo around the dark
+middle: the far side of the ring, its light bent over the top. Two spiral waves run round the
+dust at different speeds, and where both are high it glows the most. The side that turns towards
+you is the brighter one.
+
+A character cell is two dots, one above the other, drawn with the half block ▀. A dot with no
+heat is not drawn at all, so the glass of the window shows through, in the middle most of all.
+"""
+
+import math
+import os
+import shutil
+import sys
+import time
+
+# The colours of the dust as theme.ini names them, from the coolest to the hottest.
+GRADIENT = ("{{wine|rgb}}", "{{ember|rgb}}", "{{orange|rgb}}", "{{gold|rgb}}", "{{cream|rgb}}")
+SHADES = 48  # how many steps of colour lie between no heat and the most
+FPS = 20
+
+
+def shades():
+    """SHADES colours along GRADIENT, each as the "r;g;b" a terminal wants. Number 0 is never drawn."""
+    stops = [[int(part) for part in colour.split(";")] for colour in GRADIENT]
+    made = []
+    for shade in range(SHADES):
+        place = shade / (SHADES - 1) * (len(stops) - 1)
+        low = min(int(place), len(stops) - 2)
+        made.append(";".join(str(round(a + (b - a) * (place - low))) for a, b in zip(stops[low], stops[low + 1])))
+    return made
+
+
+SHADE = shades()
+
+
+TILT = 0.3  # how flat the ring looks: 1 is seen from straight above, 0 from the side
+
+
+def speed():
+    """How fast the dust goes round, in radians a second: the load of the last minute, the most when every core is busy."""
+    return 0.5 + 2.5 * min(os.getloadavg()[0] / os.cpu_count(), 1)
+
+
+def dust(wide, high):
+    """The dots that glow on a screen of that many dots, each as (row, column, the most heat it gets, where it is on the first wave, on the second)."""
+    middle_x, middle_y = (wide - 1) / 2, (high - 1) / 2
+    edge = min(0.48 * wide, 1.4 * high)  # the outside of the ring, as far across as fits
+    hole = 0.22 * edge                    # the dark middle
+    inside = 1.3 * hole                   # where the ring starts
+    lit = []
+    for y in range(high):
+        dy = y - middle_y
+        for x in range(wide):
+            dx = x - middle_x
+            far = math.hypot(dx, dy)          # from the middle of the screen
+            out = math.hypot(dx, dy / TILT)   # from the middle along the tilted ring
+            most = 0.0
+            if hole <= far < 1.5 * hole:      # the halo: a round ring, hottest at the edge of the dark
+                most, turn, along = 0.9 * (1 - (far - hole) / (0.5 * hole)), math.atan2(dy, dx), far
+            # The ring itself. Its near half (below the middle) passes in front of the dark and of
+            # the halo; its far half is hidden behind the dark.
+            if inside <= out < edge and (dy > 0 or far >= hole):
+                ring = (1 - (out - inside) / (edge - inside)) ** 0.8
+                if dy > 0 or ring > most:
+                    most, turn, along = ring, math.atan2(dy / TILT, dx), out
+            if most:
+                most *= 0.85 - 0.15 * math.cos(turn)  # the left side turns towards you
+                # Spirals: further out is further behind, so the arms trail.
+                lit.append((y, x, most, 2 * turn + 3 * math.log(along), 5 * turn + 4 * math.log(along)))
+    return lit
+
+
+def glow(heat, lit, spun):
+    """The heat of every dot of dust when it has gone round by spun radians. heat is a list of rows, the top one first, changed in place."""
+    sin = math.sin
+    for y, x, most, one, two in lit:
+        heat[y][x] = most * (0.7 + 0.3 * sin(one - spun) * sin(two - 1.7 * spun))
+
+
+def cell(top, bottom):
+    """A cell from the shades of its two dots: (the colours to switch to, the character)."""
+    if not top and not bottom:
+        return "\x1b[0m", " "
+    if not bottom:
+        return f"\x1b[0;38;2;{SHADE[top]}m", "▀"
+    if not top:
+        return f"\x1b[0;38;2;{SHADE[bottom]}m", "▄"
+    return f"\x1b[38;2;{SHADE[top]};48;2;{SHADE[bottom]}m", "▀"
+
+
+CELLS = {}  # every cell drawn so far, by its two shades
+
+
+def picture(heat):
+    """heat as the text that draws it, from the top left corner of the screen."""
+    top_shade = SHADES - 1
+    out = []
+    for line in range(len(heat) // 2):
+        out.append(f"\x1b[{line + 1};1H")
+        colours = None
+        for pair in zip(heat[2 * line], heat[2 * line + 1]):
+            # Heat squared: only the inside of the ring is white, and its edge thins out into the dark.
+            key = int(pair[0] * pair[0] * top_shade), int(pair[1] * pair[1] * top_shade)
+            if key not in CELLS:
+                CELLS[key] = cell(*key)
+            new, character = CELLS[key]
+            if new != colours:  # colours are said only where they change: most of the text is then the characters
+                out.append(new)
+                colours = new
+            out.append(character)
+        out.append("\x1b[0m")
+    return "".join(out)
+
+
+def cold(wide, lines):
+    """A screen of that many cells with no heat on it."""
+    return [[0.0] * wide for _ in range(2 * lines)]
+
+
+def run():
+    size, heat, lit, turning, spun, frame = None, None, None, speed(), 0.0, 0
+    sys.stdout.write("\x1b[?1049h\x1b[?25l")  # the terminal's second screen, and no cursor
+    try:
+        while True:
+            started = time.monotonic()
+            if shutil.get_terminal_size() != size:  # the window was resized: start again
+                size = shutil.get_terminal_size()
+                heat = cold(size.columns, size.lines)
+                lit = dust(size.columns, 2 * size.lines)
+                sys.stdout.write("\x1b[2J")
+            if frame % FPS == 0:
+                turning = speed()
+            frame += 1
+            spun += turning / FPS  # added up frame by frame, so a change of speed is not a jump
+            glow(heat, lit, spun)
+            sys.stdout.write(picture(heat))
+            sys.stdout.flush()
+            time.sleep(max(0, 1 / FPS - (time.monotonic() - started)))
+    except KeyboardInterrupt:
+        pass
+    finally:
+        sys.stdout.write("\x1b[?25h\x1b[?1049l")
+
+
+def check():
+    """A small hole is dark in the middle and in the corners, glows around the middle, turns, and can be drawn."""
+    heat, lit = cold(40, 15), dust(40, 30)
+    glow(heat, lit, 0)
+    assert all(0 <= dot <= 1 for row in heat for dot in row), "heat outside 0 to 1"
+    assert heat[15][20] == heat[14][19] == 0, "the middle must be dark"
+    assert heat[0][0] == heat[-1][-1] == 0, "the corners must be dark"
+    assert max(heat[17]) > 0.3, "the ring must glow in front of the hole"
+    assert sum(heat[15][:20]) > sum(heat[15][20:]), "the left side must be the brighter one"
+    drawn = picture(heat)
+    assert drawn.count("\x1b[") < 40 * 15 and "▀" in drawn, "the picture is not drawn as it should be"
+    glow(heat, lit, 1)
+    assert picture(heat) != drawn, "it must turn"
+    started = time.monotonic()
+    big, lit = cold(110, 30), dust(110, 60)
+    for frame in range(20):
+        glow(big, lit, frame / FPS)
+        picture(big)
+    print(f"ok ({(time.monotonic() - started) / 20 * 1000:.0f} ms a frame at 110 x 30; {1000 // FPS} ms is the time there is)")
+
+
+if __name__ == "__main__":
+    check() if sys.argv[1:] == ["check"] else run()

@@ -118,15 +118,15 @@ workspace 9:
 ┌──────────┬──────────┐
 │ fastfetch│          │
 ├──────────┤   btop   │
-│   fire   │          │
+│   hole   │          │
 └──────────┴──────────┘
 ```
 
 The same key goes to the showpiece when it is open and you are elsewhere, and pressed on
 workspace 9 closes those three windows (and only those) and goes back to where you were.
 
-The fire is `config/showpiece/fire`, a page of Python in the colours of the theme. It burns as
-high as the machine is busy: low on an idle one, to the top when every core is at work.
+The black hole is `config/showpiece/hole`, a page of Python in the colours of the theme. Its
+ember dust spins as fast as the machine is busy, and the window shows through the dark of it.
 
 ## Layout
 

@@ -3,7 +3,7 @@
 #   ┌──────────┬──────────┐
 #   │ fastfetch│          │
 #   ├──────────┤   btop   │
-#   │   fire   │          │
+#   │   hole   │          │
 #   └──────────┴──────────┘
 # The one key does all of it: it opens the showpiece, goes to it when it is open and you are
 # elsewhere, and from its own workspace closes it and goes back to where you were.
@@ -63,7 +63,7 @@ all_up && exit 0
 # All three at once: a Ghostty takes about a second to start, and they need not wait for each other.
 # fastfetch drops to a shell afterwards, so its output stays on screen.
 open_pane fastfetch zsh -lc "cd ~/dev; fastfetch; exec zsh"
-open_pane fire "$REPO/build/showpiece/fire"
+open_pane hole "$REPO/build/showpiece/hole"
 open_pane btop btop
 for _ in $(seq 25); do   # up to five seconds
   all_up && break
@@ -72,16 +72,16 @@ done
 all_up || exit 1
 
 # Build the tree from scratch, whatever shape the workspace was left in and whichever window
-# came first: one row with fastfetch and fire at the left end and btop at the right, then the
+# came first: one row with fastfetch and hole at the left end and btop at the right, then the
 # left two joined into a column.
-fastfetch="$(pane fastfetch)" fire="$(pane fire)" btop="$(pane btop)"
+fastfetch="$(pane fastfetch)" hole="$(pane hole)" btop="$(pane btop)"
 aerospace flatten-workspace-tree --workspace "$WS"
 aerospace focus --window-id "$fastfetch"
 aerospace layout h_tiles
-to_edge "$fire" left
-to_edge "$fastfetch" left         # fastfetch | fire | … | btop
+to_edge "$hole" left
+to_edge "$fastfetch" left         # fastfetch | hole | … | btop
 to_edge "$btop" right
-aerospace focus --window-id "$fire"
-aerospace join-with left          # fastfetch + fire -> one container
-aerospace layout v_tiles          # fastfetch above fire
+aerospace focus --window-id "$hole"
+aerospace join-with left          # fastfetch + hole -> one container
+aerospace layout v_tiles          # fastfetch above hole
 aerospace focus --window-id "$fastfetch"
